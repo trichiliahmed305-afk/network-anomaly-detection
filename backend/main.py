@@ -22,7 +22,7 @@ app = FastAPI(
 # Autoriser les requêtes depuis le frontend (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # En production, remplace par l'URL de ton frontend
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -31,7 +31,7 @@ app.add_middleware(
 # CHARGEMENT DES MODÈLES AU DÉMARRAGE
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR, '..', 'models')
+MODELS_DIR = os.path.join(BASE_DIR, 'models')  # ✅ CORRIGÉ : models/ est dans backend/
 
 def charger_modele(nom_fichier):
     """Charge un modèle pickle depuis le dossier models/"""
@@ -40,20 +40,28 @@ def charger_modele(nom_fichier):
         return pickle.load(f)
 
 try:
-    rf_model  = charger_modele('rf_model.pkl')    # Modèle principal
-    iso_model = charger_modele('iso_model.pkl')    # Modèle non-supervisé
-    scaler    = charger_modele('scaler.pkl')       # Normalisation
+    rf_model = charger_modele('rf_model.pkl')
+    scaler   = charger_modele('scaler.pkl')
 
     with open(os.path.join(MODELS_DIR, 'feature_names.json')) as f:
         feature_names = json.load(f)
 
-    print("✅ Tous les modèles chargés avec succès!")
+    # iso_model est optionnel — pas d'erreur s'il est absent
+    try:
+        iso_model = charger_modele('iso_model.pkl')
+        print("✅ iso_model.pkl chargé")
+    except Exception:
+        iso_model = None
+        print("⚠️ iso_model.pkl absent — ignoré")
+
+    print("✅ Modèles principaux chargés avec succès!")
+
 except Exception as e:
     print(f"❌ Erreur chargement modèles: {e}")
     rf_model = iso_model = scaler = None
     feature_names = []
 
-# Historique des alertes (stocké en mémoire — en production : base de données)
+# Historique des alertes (stocké en mémoire)
 alert_history: List[dict] = []
 
 # ============================================================
@@ -62,7 +70,7 @@ alert_history: List[dict] = []
 def determine_risk_level(confidence: float, prediction: int) -> str:
     """Détermine le niveau de risque selon la confiance du modèle"""
     if prediction == 0:
-        return "LOW"   # Trafic bénin
+        return "LOW"
     if confidence >= 95:
         return "CRITICAL"
     elif confidence >= 80:
@@ -121,7 +129,7 @@ def statut():
         "api_status": "online",
         "modeles": {
             "random_forest": "loaded" if rf_model else "error",
-            "isolation_forest": "loaded" if iso_model else "error",
+            "isolation_forest": "loaded" if iso_model else "absent",
             "scaler": "loaded" if scaler else "error",
         },
         "total_alertes": len(alert_history),
@@ -132,7 +140,7 @@ def statut():
 def predire(data: TrafficData):
     """
     🔮 Analyser une connexion réseau et détecter les anomalies.
-    
+
     Envoie les caractéristiques d'une connexion réseau.
     Reçois une prédiction : Bénin (0) ou Malveillant (1).
     """
@@ -154,7 +162,7 @@ def predire(data: TrafficData):
         # 4. Déterminer le niveau de risque
         risk_level = determine_risk_level(confidence, prediction)
         label = "Malicious" if prediction == 1 else "Benign"
-        
+
         alert_msg = (
             f"🚨 ALERTE : Trafic malveillant détecté ! Confiance : {confidence}%"
             if prediction == 1
@@ -171,7 +179,6 @@ def predire(data: TrafficData):
             "data": data.dict()
         }
         alert_history.append(alert_entry)
-        # Garder seulement les 1000 dernières alertes en mémoire
         if len(alert_history) > 1000:
             alert_history.pop(0)
 
@@ -192,7 +199,7 @@ def obtenir_alertes(limit: int = 50):
     """📋 Récupérer les dernières alertes générées"""
     return {
         "total": len(alert_history),
-        "alertes": alert_history[-limit:][::-1]   # Les plus récentes en premier
+        "alertes": alert_history[-limit:][::-1]
     }
 
 @app.get("/stats", tags=["Statistiques"])
@@ -200,11 +207,11 @@ def statistiques():
     """📊 Statistiques globales du système de détection"""
     if not alert_history:
         return {"message": "Aucune analyse effectuée pour l'instant"}
-    
+
     total = len(alert_history)
     malveillants = sum(1 for a in alert_history if a['prediction'] == 1)
     benins = total - malveillants
-    
+
     return {
         "total_analyses": total,
         "trafic_malveillant": malveillants,
