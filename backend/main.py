@@ -61,7 +61,8 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
     else:
         return "LOW"
 
-def preparer_features(data: TrafficData) -> np.ndarray:
+def preparer_features(data: TrafficData) -> pd.DataFrame:
+    """Transforme les données d'entrée en DataFrame avec les bons noms de colonnes"""
     features = {
         'duration': data.duration,
         'orig_bytes': data.orig_bytes,
@@ -80,6 +81,12 @@ def preparer_features(data: TrafficData) -> np.ndarray:
         'day_of_week': data.day_of_week,
         'inter_arrival_time': data.inter_arrival_time,
     }
+    df = pd.DataFrame([features])
+    for col in feature_names:
+        if col not in df.columns:
+            df[col] = 0
+    # ✅ Retourner le DataFrame avec les noms — pas .values
+    return df[feature_names] if feature_names else df
     df = pd.DataFrame([features])
     for col in feature_names:
         if col not in df.columns:
