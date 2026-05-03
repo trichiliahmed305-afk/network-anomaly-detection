@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 # ============================================================
 # CONSTANTS
 # ============================================================
-API_URL = "http://localhost:8000"
+API_URL = "https://itgate-anomaly-api.onrender.com"
 
 RISK_COLORS = {
     "LOW":      {"dark": "#22c55e", "light": "#16a34a", "amber": "#4ade80"},
