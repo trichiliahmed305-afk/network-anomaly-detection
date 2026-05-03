@@ -49,6 +49,13 @@ except Exception as e:
 
 alert_history: List[dict] = []
 
+# Colonnes que le scaler connaît (9 colonnes numériques)
+SCALER_COLS = [
+    'duration', 'orig_bytes', 'resp_bytes', 'orig_pkts',
+    'resp_pkts', 'orig_ip_bytes', 'resp_ip_bytes',
+    'inter_arrival_time', 'pkt_ratio'
+]
+
 def determine_risk_level(confidence: float, prediction: int) -> str:
     if prediction == 0:
         return "LOW"
@@ -62,37 +69,37 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
         return "LOW"
 
 def preparer_features(data: TrafficData) -> pd.DataFrame:
-    """Transforme les données d'entrée en DataFrame avec les bons noms de colonnes"""
+    """Transforme les données en DataFrame avec les 21 features exactes du modèle"""
     features = {
-        'duration': data.duration,
-        'orig_bytes': data.orig_bytes,
-        'resp_bytes': data.resp_bytes,
-        'orig_pkts': data.orig_pkts,
-        'resp_pkts': data.resp_pkts,
-        'orig_ip_bytes': data.orig_ip_bytes,
-        'resp_ip_bytes': data.resp_ip_bytes,
-        'pkt_ratio': data.pkt_ratio,
-        'avg_orig_pkt_size': data.avg_orig_pkt_size,
-        'avg_resp_pkt_size': data.avg_resp_pkt_size,
-        'is_orig_local': data.is_orig_local,
+        'id.orig_p':          data.id_orig_p,
+        'id.resp_p':          data.id_resp_p,
+        'duration':           data.duration,
+        'orig_bytes':         data.orig_bytes,
+        'resp_bytes':         data.resp_bytes,
+        'missed_bytes':       data.missed_bytes,
+        'orig_pkts':          data.orig_pkts,
+        'orig_ip_bytes':      data.orig_ip_bytes,
+        'resp_pkts':          data.resp_pkts,
+        'resp_ip_bytes':      data.resp_ip_bytes,
+        'is_orig_local':      data.is_orig_local,
+        'orig_h_count':       data.orig_h_count,
+        'resp_h_count':       data.resp_h_count,
         'is_well_known_port': data.is_well_known_port,
-        'hour': data.hour,
-        'minute': data.minute,
-        'day_of_week': data.day_of_week,
+        'hour':               data.hour,
+        'minute':             data.minute,
+        'day_of_week':        data.day_of_week,
         'inter_arrival_time': data.inter_arrival_time,
+        'pkt_ratio':          data.pkt_ratio,
+        'avg_orig_pkt_size':  data.avg_orig_pkt_size,
+        'avg_resp_pkt_size':  data.avg_resp_pkt_size,
     }
     df = pd.DataFrame([features])
-    for col in feature_names:
-        if col not in df.columns:
-            df[col] = 0
-    # ✅ Retourner le DataFrame avec les noms — pas .values
-    return df[feature_names] if feature_names else df
-    df = pd.DataFrame([features])
-    for col in feature_names:
-        if col not in df.columns:
-            df[col] = 0
-    df = df[feature_names] if feature_names else df
-    return df.values
+
+    # Normaliser seulement les 9 colonnes que le scaler connaît
+    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
+
+    # Retourner dans l'ordre exact du modèle RF
+    return df[feature_names]
 
 @app.get("/", tags=["Status"])
 def racine():
@@ -122,11 +129,15 @@ def predire(data: TrafficData):
     if rf_model is None:
         raise HTTPException(status_code=503, detail="Modèles non disponibles")
     try:
+        # 1. Préparer et normaliser les features
         X = preparer_features(data)
-        X_scaled = scaler.transform(X)
-        prediction = int(rf_model.predict(X_scaled)[0])
-        probas = rf_model.predict_proba(X_scaled)[0]
+
+        # 2. Prédire directement (scaler déjà appliqué dans preparer_features)
+        prediction = int(rf_model.predict(X)[0])
+        probas = rf_model.predict_proba(X)[0]
         confidence = round(float(max(probas)) * 100, 2)
+
+        # 3. Déterminer le niveau de risque
         risk_level = determine_risk_level(confidence, prediction)
         label = "Malicious" if prediction == 1 else "Benign"
         alert_msg = (
@@ -134,6 +145,8 @@ def predire(data: TrafficData):
             if prediction == 1
             else f"✅ Trafic normal. Confiance : {confidence}%"
         )
+
+        # 4. Enregistrer dans l'historique
         alert_entry = {
             "timestamp": datetime.now().isoformat(),
             "prediction": prediction,
@@ -145,6 +158,7 @@ def predire(data: TrafficData):
         alert_history.append(alert_entry)
         if len(alert_history) > 1000:
             alert_history.pop(0)
+
         return PredictionResult(
             prediction=prediction,
             label=label,
