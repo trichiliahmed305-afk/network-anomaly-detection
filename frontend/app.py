@@ -1121,8 +1121,7 @@ elif page == "Real-Time Detection":
             progress = (i + 1) / len(connexions_list)
             progress_bar.progress(progress)
 
-            time.sleep(intervalle)
-
+            pass
         # Résumé final
         status_text.empty()
         st.divider()
