@@ -116,6 +116,7 @@ PAGES = [
     "Alert Log",
     "Statistics",
     "PDF Report",
+    "Real-Time Detection",
 ]
 
 # ============================================================
@@ -961,3 +962,196 @@ elif page == "PDF Report":
             """,
             unsafe_allow_html=True,
         )
+
+# ============================================================
+# PAGE 6 — REAL-TIME DETECTION
+# ============================================================
+elif page == "Real-Time Detection":
+    st.title("Real-Time Detection")
+    st.caption("Simulation de detection d'anomalies reseau en temps reel.")
+    st.divider()
+
+    # Connexions de test predefinies
+    CONNEXIONS = {
+        "Trafic HTTP normal": {
+            "id_orig_p": 12345, "id_resp_p": 80,
+            "duration": 1.5, "orig_bytes": 500.0, "resp_bytes": 200.0,
+            "missed_bytes": 0.0, "orig_pkts": 5.0, "orig_ip_bytes": 600.0,
+            "resp_pkts": 3.0, "resp_ip_bytes": 250.0,
+            "is_orig_local": 1, "orig_h_count": 10.0, "resp_h_count": 5.0,
+            "is_well_known_port": 1, "hour": 14, "minute": 30,
+            "day_of_week": 1, "inter_arrival_time": 0.5,
+            "pkt_ratio": 1.67, "avg_orig_pkt_size": 100.0, "avg_resp_pkt_size": 62.5
+        },
+        "SCAN PORT Telnet (Mirai)": {
+            "id_orig_p": 54321, "id_resp_p": 23,
+            "duration": 0.001, "orig_bytes": 0.0, "resp_bytes": 0.0,
+            "missed_bytes": 0.0, "orig_pkts": 1.0, "orig_ip_bytes": 40.0,
+            "resp_pkts": 0.0, "resp_ip_bytes": 0.0,
+            "is_orig_local": 0, "orig_h_count": 500.0, "resp_h_count": 1.0,
+            "is_well_known_port": 1, "hour": 3, "minute": 0,
+            "day_of_week": 6, "inter_arrival_time": 0.001,
+            "pkt_ratio": 1.0, "avg_orig_pkt_size": 20.0, "avg_resp_pkt_size": 0.0
+        },
+        "ATTAQUE SSH Brute Force": {
+            "id_orig_p": 45678, "id_resp_p": 22,
+            "duration": 0.5, "orig_bytes": 200.0, "resp_bytes": 50.0,
+            "missed_bytes": 0.0, "orig_pkts": 10.0, "orig_ip_bytes": 300.0,
+            "resp_pkts": 5.0, "resp_ip_bytes": 100.0,
+            "is_orig_local": 0, "orig_h_count": 1000.0, "resp_h_count": 1.0,
+            "is_well_known_port": 1, "hour": 2, "minute": 30,
+            "day_of_week": 5, "inter_arrival_time": 0.05,
+            "pkt_ratio": 2.0, "avg_orig_pkt_size": 27.3, "avg_resp_pkt_size": 16.7
+        },
+        "EXFILTRATION donnees": {
+            "id_orig_p": 11111, "id_resp_p": 443,
+            "duration": 120.0, "orig_bytes": 50000.0, "resp_bytes": 100.0,
+            "missed_bytes": 500.0, "orig_pkts": 500.0, "orig_ip_bytes": 51000.0,
+            "resp_pkts": 10.0, "resp_ip_bytes": 200.0,
+            "is_orig_local": 1, "orig_h_count": 2.0, "resp_h_count": 1.0,
+            "is_well_known_port": 1, "hour": 4, "minute": 0,
+            "day_of_week": 6, "inter_arrival_time": 0.24,
+            "pkt_ratio": 50.0, "avg_orig_pkt_size": 101.6, "avg_resp_pkt_size": 18.2
+        },
+        "BOTNET C2 Communication": {
+            "id_orig_p": 22222, "id_resp_p": 6667,
+            "duration": 300.0, "orig_bytes": 500.0, "resp_bytes": 500.0,
+            "missed_bytes": 0.0, "orig_pkts": 50.0, "orig_ip_bytes": 600.0,
+            "resp_pkts": 50.0, "resp_ip_bytes": 600.0,
+            "is_orig_local": 1, "orig_h_count": 3.0, "resp_h_count": 1.0,
+            "is_well_known_port": 0, "hour": 3, "minute": 30,
+            "day_of_week": 6, "inter_arrival_time": 6.0,
+            "pkt_ratio": 1.0, "avg_orig_pkt_size": 11.8, "avg_resp_pkt_size": 11.8
+        },
+        "Trafic HTTPS normal": {
+            "id_orig_p": 55555, "id_resp_p": 443,
+            "duration": 2.5, "orig_bytes": 1000.0, "resp_bytes": 5000.0,
+            "missed_bytes": 0.0, "orig_pkts": 15.0, "orig_ip_bytes": 1200.0,
+            "resp_pkts": 20.0, "resp_ip_bytes": 5500.0,
+            "is_orig_local": 1, "orig_h_count": 8.0, "resp_h_count": 100.0,
+            "is_well_known_port": 1, "hour": 16, "minute": 20,
+            "day_of_week": 3, "inter_arrival_time": 0.15,
+            "pkt_ratio": 0.71, "avg_orig_pkt_size": 75.0, "avg_resp_pkt_size": 257.1
+        },
+    }
+
+    # ---- Configuration ----
+    st.subheader("Configuration")
+    col1, col2 = st.columns(2)
+    with col1:
+        nb_connexions = st.slider(
+            "Nombre de connexions a simuler", 1, len(CONNEXIONS),
+            len(CONNEXIONS)
+        )
+    with col2:
+        vitesse = st.selectbox(
+            "Vitesse de simulation",
+            ["Lente (2s)", "Normale (1s)", "Rapide (0.3s)"],
+            index=1
+        )
+
+    vitesse_map = {"Lente (2s)": 2.0, "Normale (1s)": 1.0, "Rapide (0.3s)": 0.3}
+    intervalle = vitesse_map[vitesse]
+
+    st.divider()
+
+    # ---- Bouton de lancement ----
+    if st.button("Lancer la detection en temps reel", use_container_width=True):
+
+        connexions_list = list(CONNEXIONS.items())[:nb_connexions]
+
+        # Conteneurs dynamiques
+        progress_bar   = st.progress(0)
+        status_text    = st.empty()
+        results_container = st.container()
+        stats_container   = st.empty()
+
+        resultats = []
+        stats = {"total": 0, "malicious": 0, "benign": 0}
+
+        with results_container:
+            st.markdown("### Flux de detection en direct")
+
+        for i, (nom, data) in enumerate(connexions_list):
+            status_text.markdown(
+                f'<p style="color:{T["text_muted"]};font-size:0.85rem">'
+                f'Analyse en cours : <strong>{nom}</strong>...</p>',
+                unsafe_allow_html=True
+            )
+
+            result = api_call("/predict", method="POST", payload=data)
+
+            if "error" not in result:
+                prediction = result.get("prediction", 0)
+                label      = result.get("label", "?")
+                confidence = result.get("confidence", 0)
+                risk       = result.get("risk_level", "LOW")
+
+                stats["total"] += 1
+                if prediction == 1:
+                    stats["malicious"] += 1
+                else:
+                    stats["benign"] += 1
+
+                resultats.append({
+                    "Connexion":      nom,
+                    "Classification": label,
+                    "Confiance (%)":  confidence,
+                    "Risque":         RISK_LABELS.get(risk, risk),
+                    "Statut":         "🚨 ALERTE" if prediction == 1 else "✅ Normal"
+                })
+
+                # Afficher résultat en temps réel
+                icon_color = T["danger"] if prediction == 1 else T["success"]
+                icon = "🚨" if prediction == 1 else "✅"
+                with results_container:
+                    st.markdown(
+                        f'<div style="background:{T["card"]};border:1px solid '
+                        f'{"" + T["border"] if prediction == 0 else T["danger"]}'
+                        f';border-radius:8px;padding:10px 16px;margin-bottom:6px;'
+                        f'border-left:3px solid {icon_color}">'
+                        f'<span style="font-weight:600">{icon} {nom}</span> '
+                        f'<span style="color:{T["text_muted"]};font-size:0.82rem;margin-left:8px">'
+                        f'{label} · {confidence}% · {RISK_LABELS.get(risk, risk)}'
+                        f'</span></div>',
+                        unsafe_allow_html=True
+                    )
+
+            # Mettre à jour la barre de progression
+            progress = (i + 1) / len(connexions_list)
+            progress_bar.progress(progress)
+
+            time.sleep(intervalle)
+
+        # Résumé final
+        status_text.empty()
+        st.divider()
+        st.subheader("Résumé de la session")
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total analysé",   stats["total"])
+        c2.metric("Bénins",          stats["benign"])
+        c3.metric("Malveillants",    stats["malicious"])
+        taux = round(stats["malicious"] / stats["total"] * 100, 1) if stats["total"] > 0 else 0
+        c4.metric("Taux menaces",    f"{taux}%")
+
+        if resultats:
+            st.divider()
+            df_results = pd.DataFrame(resultats)
+            st.dataframe(df_results, use_container_width=True, hide_index=True)
+
+            # Graphique
+            fig = px.pie(
+                values=[stats["benign"], stats["malicious"]],
+                names=["Benin", "Malveillant"],
+                color_discrete_sequence=[T["success"], T["danger"]],
+                title="Repartition de la session",
+                hole=0.4,
+            )
+            fig.update_layout(
+                paper_bgcolor=T["plot_bg"],
+                plot_bgcolor=T["plot_bg"],
+                font_color=T["text"],
+                margin=dict(t=40, b=20, l=20, r=20),
+            )
+            st.plotly_chart(fig, use_container_width=True)
