@@ -2,43 +2,37 @@
 from fpdf import FPDF
 from datetime import datetime
 from typing import List
-import os
+
 
 class RapportAnomalies(FPDF):
-    """Générateur de rapport PDF pour les anomalies réseau détectées"""
 
     def header(self):
-        """En-tête de chaque page"""
-        # Logo / Titre
         self.set_font('Helvetica', 'B', 16)
-        self.set_fill_color(13, 27, 42)      # Bleu nuit
-        self.set_text_color(255, 255, 255)   # Blanc
-        self.cell(0, 15, 'ITGATE — Rapport de Detection d Anomalies Reseau', 
+        self.set_fill_color(13, 27, 42)
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 15, 'ITGATE - Rapport de Detection d Anomalies Reseau',
                   fill=True, align='C', new_x='LMARGIN', new_y='NEXT')
         self.set_text_color(0, 0, 0)
         self.ln(5)
 
     def footer(self):
-        """Pied de page"""
         self.set_y(-15)
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(128, 128, 128)
-        self.cell(0, 10, 
-                  f'ITGATE PFE 2026 — Page {self.page_no()} — Confidentiel',
+        self.cell(0, 10,
+                  f'ITGATE PFE 2026 - Page {self.page_no()} - Confidentiel',
                   align='C')
 
     def titre_section(self, titre: str):
-        """Titre de section avec fond coloré"""
         self.set_font('Helvetica', 'B', 12)
-        self.set_fill_color(52, 152, 219)    # Bleu
+        self.set_fill_color(52, 152, 219)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 10, titre, fill=True, 
+        self.cell(0, 10, titre, fill=True,
                   new_x='LMARGIN', new_y='NEXT')
         self.set_text_color(0, 0, 0)
         self.ln(3)
 
     def ligne_info(self, label: str, valeur: str):
-        """Ligne d'information label : valeur"""
         self.set_font('Helvetica', 'B', 10)
         self.cell(60, 8, f'{label} :', new_x='RIGHT', new_y='LAST')
         self.set_font('Helvetica', '', 10)
@@ -46,10 +40,6 @@ class RapportAnomalies(FPDF):
 
 
 def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
-    """
-    Génère un rapport PDF complet des incidents détectés.
-    Retourne les bytes du PDF.
-    """
     pdf = RapportAnomalies()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -61,7 +51,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     taux = round((malveillants / total * 100), 2) if total > 0 else 0
 
     # ============================================================
-    # PAGE 1 — RÉSUMÉ EXÉCUTIF
+    # PAGE 1 - RESUME EXECUTIF
     # ============================================================
     pdf.titre_section("1. INFORMATIONS DU RAPPORT")
     pdf.ligne_info("Date de generation", now.strftime("%d/%m/%Y a %H:%M:%S"))
@@ -72,9 +62,9 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
 
     pdf.titre_section("2. RESUME EXECUTIF")
     pdf.ligne_info("Total connexions analysees", str(total))
-    pdf.ligne_info("Connexions maleveilantes", f"{malveillants} ({taux}%)")
-    pdf.ligne_info("Connexions benignes", f"{benins}")
-    pdf.ligne_info("Periode analysee", 
+    pdf.ligne_info("Connexions malveillantes", f"{malveillants} ({taux}%)")
+    pdf.ligne_info("Connexions benignes", str(benins))
+    pdf.ligne_info("Periode analysee",
                    f"{alert_history[0]['timestamp'][:10]} au {alert_history[-1]['timestamp'][:10]}"
                    if alert_history else "N/A")
     pdf.ln(5)
@@ -85,14 +75,19 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         niveaux[a['risk_level']] = niveaux.get(a['risk_level'], 0) + 1
 
     pdf.titre_section("3. DISTRIBUTION DES NIVEAUX DE RISQUE")
-    
+
     couleurs = {
-        'LOW':      (46, 204, 113),   # Vert
-        'MEDIUM':   (241, 196, 15),   # Jaune
-        'HIGH':     (230, 126, 34),   # Orange
-        'CRITICAL': (231, 76, 60),    # Rouge
+        'LOW':      (46, 204, 113),
+        'MEDIUM':   (241, 196, 15),
+        'HIGH':     (230, 126, 34),
+        'CRITICAL': (231, 76, 60),
     }
-    icones = {'LOW': 'FAIBLE', 'MEDIUM': 'MOYEN', 'HIGH': 'ELEVE', 'CRITICAL': 'CRITIQUE'}
+    icones = {
+        'LOW': 'FAIBLE',
+        'MEDIUM': 'MOYEN',
+        'HIGH': 'ELEVE',
+        'CRITICAL': 'CRITIQUE'
+    }
 
     for level, count in niveaux.items():
         r, g, b = couleurs[level]
@@ -101,7 +96,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         pdf.set_font('Helvetica', 'B', 10)
         pct = round(count / total * 100, 1) if total > 0 else 0
         pdf.cell(0, 9,
-                 f"  {icones[level]} ({level}) : {count} alertes — {pct}%",
+                 f"  {icones[level]} ({level}) : {count} alertes - {pct}%",
                  fill=True, new_x='LMARGIN', new_y='NEXT')
         pdf.set_text_color(0, 0, 0)
         pdf.ln(1)
@@ -109,12 +104,11 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf.ln(5)
 
     # ============================================================
-    # PAGE 2 — JOURNAL DES ALERTES
+    # PAGE 2 - JOURNAL DES ALERTES
     # ============================================================
     pdf.add_page()
-    pdf.titre_section("4. JOURNAL DES ALERTES (50 dernières)")
+    pdf.titre_section("4. JOURNAL DES ALERTES (50 dernieres)")
 
-    # En-tête du tableau
     pdf.set_font('Helvetica', 'B', 9)
     pdf.set_fill_color(44, 62, 80)
     pdf.set_text_color(255, 255, 255)
@@ -126,10 +120,8 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
              new_x='LMARGIN', new_y='NEXT')
     pdf.set_text_color(0, 0, 0)
 
-    # Lignes du tableau
     alertes_recentes = list(reversed(alert_history))[:50]
     for i, alerte in enumerate(alertes_recentes):
-        # Couleur alternée
         if i % 2 == 0:
             pdf.set_fill_color(236, 240, 241)
         else:
@@ -141,7 +133,6 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         conf = f"{alerte['confidence']}%"
         risk = alerte['risk_level']
 
-        # Couleur du niveau de risque
         if risk == 'CRITICAL':
             msg = "ALERTE CRITIQUE"
         elif risk == 'HIGH':
@@ -161,7 +152,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf.ln(5)
 
     # ============================================================
-    # PAGE 3 — RECOMMANDATIONS
+    # PAGE 3 - RECOMMANDATIONS
     # ============================================================
     pdf.add_page()
     pdf.titre_section("5. RECOMMANDATIONS DE SECURITE")
@@ -203,12 +194,11 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf.ligne_info("Features utilisees", "21 features reseau extraites")
     pdf.ligne_info("Algorithme principal", "Random Forest (100 estimateurs)")
 
-    # Signature
     pdf.ln(10)
     pdf.set_font('Helvetica', 'I', 9)
     pdf.set_text_color(128, 128, 128)
     pdf.cell(0, 8,
-             f"Rapport genere automatiquement le {now.strftime('%d/%m/%Y a %H:%M:%S')} "
+             f"Rapport genere le {now.strftime('%d/%m/%Y a %H:%M:%S')} "
              f"par ITGATE Anomaly Detection System",
              align='C')
 
