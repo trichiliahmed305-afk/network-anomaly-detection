@@ -25,7 +25,7 @@ RISK_COLORS = {
 RISK_LABELS = {
     "LOW":      "Faible",
     "MEDIUM":   "Moyen",
-    "HIGH":     "Élevé",
+    "HIGH":     "Elevé",
     "CRITICAL": "Critique",
 }
 
@@ -115,6 +115,7 @@ PAGES = [
     "Analyze Connection",
     "Alert Log",
     "Statistics",
+    "PDF Report",
 ]
 
 # ============================================================
@@ -166,62 +167,24 @@ st.markdown(f"""
     --font-body:    '{T['font_body']}', sans-serif;
 }}
 
-/* ---- GLOBAL ---- */
 html, body, [class*="css"] {{
     font-family: var(--font-body) !important;
     color: var(--text) !important;
     background-color: var(--bg) !important;
 }}
 
-.stApp {{
-    background-color: var(--bg) !important;
-}}
+.stApp {{ background-color: var(--bg) !important; }}
 
-/* ---- HIDE STREAMLIT CHROME ---- */
-header[data-testid="stHeader"],
-footer,
-#MainMenu {{
-    display: none !important;
-}}
-
+header[data-testid="stHeader"], footer, #MainMenu {{ display: none !important; }}
 [data-testid="stToolbar"] {{ display: none !important; }}
 
-/* ---- SIDEBAR ---- */
 section[data-testid="stSidebar"] {{
     background-color: var(--card) !important;
     border-right: 1px solid var(--border) !important;
     min-width: 260px !important;
 }}
+section[data-testid="stSidebar"] * {{ color: var(--text) !important; }}
 
-section[data-testid="stSidebar"] * {{
-    color: var(--text) !important;
-}}
-
-section[data-testid="stSidebar"] .stRadio label {{
-    display: block;
-    padding: 9px 14px;
-    border-radius: 7px;
-    font-size: 0.86rem;
-    font-weight: 500;
-    font-family: var(--font-body) !important;
-    cursor: pointer;
-    margin-bottom: 2px;
-    transition: background 0.15s;
-    color: var(--sub) !important;
-}}
-
-section[data-testid="stSidebar"] .stRadio label:hover {{
-    background: var(--nav-hover) !important;
-    color: var(--text) !important;
-}}
-
-section[data-testid="stSidebar"] .stRadio [data-baseweb="radio"] input:checked + div + label,
-section[data-testid="stSidebar"] .stRadio [aria-checked="true"] ~ label {{
-    background: var(--nav-active) !important;
-    color: var(--accent) !important;
-}}
-
-/* ---- MAIN CONTENT ---- */
 [data-testid="stMainBlockContainer"],
 [data-testid="block-container"] {{
     background-color: var(--bg) !important;
@@ -229,7 +192,6 @@ section[data-testid="stSidebar"] .stRadio [aria-checked="true"] ~ label {{
     padding-bottom: 3rem !important;
 }}
 
-/* ---- TYPOGRAPHY ---- */
 h1 {{
     font-family: var(--font) !important;
     font-size: 1.65rem !important;
@@ -256,24 +218,19 @@ h3 {{
     letter-spacing: 0.08em !important;
 }}
 
-p, li, span, div {{
-    color: var(--text) !important;
-}}
+p, li, span, div {{ color: var(--text) !important; }}
 
-/* Caption */
 [data-testid="stCaptionContainer"] p {{
     color: var(--muted) !important;
     font-size: 0.82rem !important;
 }}
 
-/* ---- DIVIDER ---- */
 hr {{
     border: none !important;
     border-top: 1px solid var(--border) !important;
     margin: 1.2rem 0 !important;
 }}
 
-/* ---- METRIC CARDS ---- */
 [data-testid="stMetric"] {{
     background: var(--metric-bg) !important;
     border: 1px solid var(--border) !important;
@@ -303,11 +260,6 @@ hr {{
     color: var(--text) !important;
 }}
 
-[data-testid="stMetricDelta"] {{
-    font-size: 0.78rem !important;
-}}
-
-/* ---- BUTTONS ---- */
 div.stButton > button {{
     background-color: var(--accent) !important;
     color: #ffffff !important;
@@ -317,7 +269,6 @@ div.stButton > button {{
     font-weight: 600 !important;
     font-size: 0.85rem !important;
     padding: 0.55rem 1.6rem !important;
-    letter-spacing: 0.02em !important;
     transition: opacity 0.2s, transform 0.1s !important;
 }}
 
@@ -326,11 +277,6 @@ div.stButton > button:hover {{
     transform: translateY(-1px) !important;
 }}
 
-div.stButton > button:active {{
-    transform: translateY(0) !important;
-}}
-
-/* ---- FORM SUBMIT ---- */
 div[data-testid="stFormSubmitButton"] > button {{
     background: linear-gradient(135deg, var(--accent), var(--accent2)) !important;
     color: #ffffff !important;
@@ -339,13 +285,10 @@ div[data-testid="stFormSubmitButton"] > button {{
     font-family: var(--font) !important;
     font-weight: 700 !important;
     font-size: 0.9rem !important;
-    letter-spacing: 0.04em !important;
     padding: 0.65rem 2rem !important;
     width: 100% !important;
-    transition: opacity 0.2s !important;
 }}
 
-/* ---- INPUTS ---- */
 div[data-testid="stNumberInput"] input,
 div[data-testid="stTextInput"] input,
 div[data-baseweb="select"] {{
@@ -357,25 +300,6 @@ div[data-baseweb="select"] {{
     font-size: 0.88rem !important;
 }}
 
-div[data-testid="stNumberInput"] input:focus,
-div[data-testid="stTextInput"] input:focus {{
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 2px rgba(59,130,246,0.15) !important;
-    outline: none !important;
-}}
-
-div[data-baseweb="select"] * {{
-    background-color: var(--card2) !important;
-    color: var(--text) !important;
-}}
-
-/* ---- SLIDER ---- */
-[data-testid="stSlider"] [data-baseweb="slider"] div[role="slider"] {{
-    background-color: var(--accent) !important;
-    border-color: var(--accent) !important;
-}}
-
-/* ---- FORM CONTAINER ---- */
 [data-testid="stForm"] {{
     background: var(--card) !important;
     border: 1px solid var(--border) !important;
@@ -383,7 +307,6 @@ div[data-baseweb="select"] * {{
     padding: 24px !important;
 }}
 
-/* ---- ALERTS / NOTIFICATIONS ---- */
 [data-testid="stAlert"] {{
     border-radius: 9px !important;
     border-left-width: 3px !important;
@@ -391,46 +314,12 @@ div[data-baseweb="select"] * {{
     font-size: 0.88rem !important;
 }}
 
-div[data-testid="stAlert"][data-type="error"] {{
-    background: rgba(239,68,68,0.08) !important;
-    border-left-color: var(--danger) !important;
-}}
-
-div[data-testid="stAlert"][data-type="success"] {{
-    background: rgba(34,197,94,0.08) !important;
-    border-left-color: var(--success) !important;
-}}
-
-div[data-testid="stAlert"][data-type="info"] {{
-    background: rgba(59,130,246,0.07) !important;
-    border-left-color: var(--accent) !important;
-}}
-
-/* ---- DATAFRAME ---- */
 [data-testid="stDataFrame"] {{
     border-radius: 10px !important;
     overflow: hidden !important;
     border: 1px solid var(--border) !important;
 }}
 
-[data-testid="stDataFrame"] table {{
-    font-family: var(--font-body) !important;
-    font-size: 0.83rem !important;
-}}
-
-/* ---- SPINNER ---- */
-[data-testid="stSpinner"] p {{
-    font-family: var(--font-body) !important;
-    color: var(--muted) !important;
-    font-size: 0.85rem !important;
-}}
-
-/* ---- RADIO (sidebar nav) ---- */
-[data-testid="stSidebar"] .stRadio > div {{
-    gap: 2px !important;
-}}
-
-/* ---- SECTION LABEL ---- */
 .section-label {{
     font-family: var(--font-body);
     font-size: 0.72rem;
@@ -442,7 +331,6 @@ div[data-testid="stAlert"][data-type="info"] {{
     margin-top: 4px;
 }}
 
-/* ---- RESULT CARD ---- */
 .result-card {{
     background: var(--card);
     border: 1px solid var(--border);
@@ -461,7 +349,6 @@ div[data-testid="stAlert"][data-type="info"] {{
     background: rgba(34,197,94,0.05);
 }}
 
-/* ---- STATUS DOT ---- */
 .status-dot {{
     display: inline-block;
     width: 8px; height: 8px;
@@ -476,32 +363,6 @@ div[data-testid="stAlert"][data-type="info"] {{
     50% {{ opacity: 0.45; }}
 }}
 
-/* ---- RISK BADGE ---- */
-.risk-badge {{
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-family: var(--font-body);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}}
-
-/* ---- THEME SWITCHER ---- */
-.theme-btn-row {{
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}}
-
-/* ---- SCROLLBAR ---- */
-::-webkit-scrollbar {{ width: 5px; height: 5px; }}
-::-webkit-scrollbar-track {{ background: var(--bg); }}
-::-webkit-scrollbar-thumb {{ background: var(--scroll); border-radius: 10px; }}
-::-webkit-scrollbar-thumb:hover {{ background: var(--accent); }}
-
-/* ---- INFO BOX ---- */
 .info-block {{
     background: var(--card);
     border: 1px solid var(--border);
@@ -523,7 +384,22 @@ div[data-testid="stAlert"][data-type="info"] {{
     color: var(--accent2);
 }}
 
-/* ---- SIDEBAR LOGO ---- */
+.pdf-card {{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+}}
+
+.pdf-stat {{
+    background: var(--metric-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: center;
+}}
+
 .sidebar-logo {{
     font-family: var(--font);
     font-size: 1.05rem;
@@ -532,9 +408,7 @@ div[data-testid="stAlert"][data-type="info"] {{
     letter-spacing: -0.3px;
 }}
 
-.sidebar-logo span {{
-    color: var(--accent);
-}}
+.sidebar-logo span {{ color: var(--accent); }}
 
 .sidebar-version {{
     font-family: var(--font-body);
@@ -542,6 +416,10 @@ div[data-testid="stAlert"][data-type="info"] {{
     color: var(--muted);
     margin-top: 2px;
 }}
+
+::-webkit-scrollbar {{ width: 5px; height: 5px; }}
+::-webkit-scrollbar-track {{ background: var(--bg); }}
+::-webkit-scrollbar-thumb {{ background: var(--scroll); border-radius: 10px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -550,7 +428,6 @@ div[data-testid="stAlert"][data-type="info"] {{
 # UTILITIES
 # ============================================================
 def api_call(endpoint: str, method: str = "GET", payload: dict = None) -> dict:
-    """Perform an API call with granular error handling."""
     try:
         url = f"{API_URL}{endpoint}"
         if method == "POST":
@@ -560,44 +437,52 @@ def api_call(endpoint: str, method: str = "GET", payload: dict = None) -> dict:
         response.raise_for_status()
         return response.json()
     except requests.exceptions.ConnectionError:
-        return {"error": "connection", "message": "Connexion refusée. Vérifiez que l'API est démarrée sur http://localhost:8000."}
+        return {"error": "connection", "message": "Connexion refusee. Verifiez que l'API est demarree."}
     except requests.exceptions.Timeout:
-        return {"error": "timeout", "message": "L'API ne répond pas (délai dépassé). Réessayez dans quelques instants."}
+        return {"error": "timeout", "message": "L'API ne repond pas. Reessayez dans quelques instants."}
     except requests.exceptions.HTTPError as e:
         code = e.response.status_code if e.response else "?"
-        return {"error": "http", "message": f"Erreur HTTP {code} renvoyée par l'API."}
+        return {"error": "http", "message": f"Erreur HTTP {code} renvoyee par l'API."}
     except Exception as exc:
         return {"error": "unknown", "message": str(exc)}
 
 
+def api_call_raw(endpoint: str) -> bytes:
+    """Appel API qui retourne les bytes bruts (pour PDF)"""
+    try:
+        url = f"{API_URL}{endpoint}"
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        return response.content
+    except Exception as e:
+        return None
+
+
 def render_risk_badge(level: str) -> str:
-    """Return a colored HTML badge for a risk level."""
     color = RISK_COLORS.get(level, {}).get(st.session_state.theme, "#888")
     label = RISK_LABELS.get(level, level)
-    text_color = T["badge_text"]
     return (
-        f'<span class="risk-badge" style="background:{color};color:{text_color}">'
+        f'<span style="background:{color};color:#fff;padding:2px 10px;'
+        f'border-radius:20px;font-size:0.72rem;font-weight:700;">'
         f'{label}</span>'
     )
 
 
 def format_timestamp(ts: str) -> str:
-    """Format ISO timestamp to readable datetime."""
-    return ts[:19].replace("T", " ") if ts else "—"
+    return ts[:19].replace("T", " ") if ts else "-"
 
 
 def show_api_error(error_dict: dict):
-    """Display a user-friendly error message from API error dict."""
     msg = error_dict.get("message", "Erreur inconnue.")
     err_type = error_dict.get("error", "unknown")
     if err_type == "connection":
-        st.error(f"**Connexion échouée** — {msg}")
+        st.error(f"**Connexion echouee** - {msg}")
     elif err_type == "timeout":
-        st.warning(f"**Délai dépassé** — {msg}")
+        st.warning(f"**Delai depasse** - {msg}")
     elif err_type == "http":
-        st.error(f"**Erreur API** — {msg}")
+        st.error(f"**Erreur API** - {msg}")
     else:
-        st.error(f"**Erreur** — {msg}")
+        st.error(f"**Erreur** - {msg}")
 
 
 # ============================================================
@@ -611,41 +496,28 @@ with st.sidebar:
     )
     st.divider()
 
-    # Theme switcher
-    st.markdown('<div class="section-label">Thème d\'affichage</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Theme d\'affichage</div>', unsafe_allow_html=True)
     theme_cols = st.columns(3)
     for i, (key, meta) in enumerate(THEMES.items()):
         with theme_cols[i]:
-            is_active = st.session_state.theme == key
-            border = f"2px solid {THEMES[key]['accent']}" if is_active else f"1px solid {T['border']}"
-            if st.button(
-                meta["label"],
-                key=f"theme_{key}",
-                use_container_width=True,
-                help=f"Activer le thème {meta['label'].lower()}",
-            ):
+            if st.button(meta["label"], key=f"theme_{key}", use_container_width=True):
                 st.session_state.theme = key
                 st.rerun()
 
     st.divider()
 
     st.markdown('<div class="section-label">Navigation</div>', unsafe_allow_html=True)
-    page = st.radio(
-        "Navigation",
-        options=PAGES,
-        label_visibility="collapsed",
-    )
+    page = st.radio("Navigation", options=PAGES, label_visibility="collapsed")
 
     st.divider()
     st.markdown(
         f'<p style="font-size:0.73rem;color:{T["text_muted"]};line-height:1.6">'
-        f'Modèles actifs<br>'
+        f'Modeles actifs<br>'
         f'<strong style="color:{T["text_sub"]}">Random Forest · Isolation Forest · XGBoost</strong>'
         f'</p>',
         unsafe_allow_html=True,
     )
 
-# Reload T after potential theme change
 T = THEMES[st.session_state.theme]
 
 # ============================================================
@@ -653,7 +525,7 @@ T = THEMES[st.session_state.theme]
 # ============================================================
 if page == "System Status":
     st.title("System Status")
-    st.caption("État en temps réel de l'API, des modèles et des composants actifs.")
+    st.caption("Etat en temps reel de l'API, des modeles et des composants actifs.")
     st.divider()
 
     status = api_call("/status")
@@ -664,38 +536,30 @@ if page == "System Status":
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("API", "En ligne")
-    col2.metric(
-        "Modèle principal",
-        status.get("modeles", {}).get("random_forest", "N/A"),
-    )
+    col2.metric("Modele principal", status.get("modeles", {}).get("random_forest", "N/A"))
     col3.metric("Alertes totales", status.get("total_alertes", 0))
     col4.metric("Latence cible", "< 2 s")
 
     st.markdown(
         f'<span class="status-dot" style="background:{T["success"]}"></span>'
-        f'<span style="font-size:0.85rem;color:{T["success"]};font-weight:600">Tous les composants sont opérationnels</span>',
+        f'<span style="font-size:0.85rem;color:{T["success"]};font-weight:600">Tous les composants sont operationnels</span>',
         unsafe_allow_html=True,
     )
 
     st.divider()
-    st.subheader("À propos du projet")
+    st.subheader("A propos du projet")
     st.markdown(
         f"""
         <div class="info-block">
-        Ce système utilise le <strong>Machine Learning</strong> pour détecter automatiquement
-        les comportements anormaux dans le trafic réseau en temps réel, en réduisant
-        le taux de faux positifs et en accélérant la réponse des équipes SOC.<br><br>
-
-        <strong>Modèles implémentés</strong><br>
-        · <code>Random Forest</code> — Classification supervisée (modèle principal)<br>
-        · <code>Isolation Forest</code> — Détection non-supervisée de menaces zero-day<br>
-        · <code>XGBoost / SVM / KNN</code> — Modèles de comparaison<br>
-        · <code>Autoencoder LSTM</code> — Détection de séquences anormales<br><br>
-
-        <strong>Jeux de données</strong><br>
+        Ce systeme utilise le <strong>Machine Learning</strong> pour detecter automatiquement
+        les comportements anormaux dans le trafic reseau en temps reel.<br><br>
+        <strong>Modeles implementes</strong><br>
+        · <code>Random Forest</code> - Classification supervisee (modele principal)<br>
+        · <code>Isolation Forest</code> - Detection non-supervisee de menaces zero-day<br>
+        · <code>XGBoost / SVM / KNN</code> - Modeles de comparaison<br><br>
+        <strong>Jeux de donnees</strong><br>
         · CTU-IoT-Malware-Capture (Stratosphere Lab)<br>
-        · CICIDS 2017 / 2018 — DoS, DDoS, Brute Force, Web Attacks<br>
-        · UNSW-NB15 — Backdoors, Exploits, Fuzzing
+        · CICIDS 2017 / 2018 - DoS, DDoS, Brute Force, Web Attacks
         </div>
         """,
         unsafe_allow_html=True,
@@ -707,45 +571,44 @@ if page == "System Status":
 # ============================================================
 elif page == "Analyze Connection":
     st.title("Analyze Connection")
-    st.caption("Saisissez les caractéristiques d'un flux réseau pour obtenir une classification ML en temps réel.")
+    st.caption("Saisissez les caracteristiques d'un flux reseau pour obtenir une classification ML.")
     st.divider()
 
     with st.form("connection_analysis_form"):
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown('<div class="section-label">Volume de données</div>', unsafe_allow_html=True)
-            orig_bytes = st.number_input("Octets envoyés (source)", min_value=0.0, value=500.0)
-            resp_bytes = st.number_input("Octets reçus (destination)", min_value=0.0, value=200.0)
-            orig_pkts  = st.number_input("Paquets envoyés", min_value=1.0, value=5.0)
-            resp_pkts  = st.number_input("Paquets reçus", min_value=1.0, value=3.0)
+            st.markdown('<div class="section-label">Volume de donnees</div>', unsafe_allow_html=True)
+            orig_bytes = st.number_input("Octets envoyes (source)", min_value=0.0, value=500.0)
+            resp_bytes = st.number_input("Octets recus (destination)", min_value=0.0, value=200.0)
+            orig_pkts  = st.number_input("Paquets envoyes", min_value=1.0, value=5.0)
+            resp_pkts  = st.number_input("Paquets recus", min_value=1.0, value=3.0)
 
         with col2:
             st.markdown('<div class="section-label">Temps et port</div>', unsafe_allow_html=True)
-            duration           = st.number_input("Durée (secondes)", min_value=0.0, value=1.5)
+            duration           = st.number_input("Duree (secondes)", min_value=0.0, value=1.5)
             is_well_known_port = st.selectbox(
                 "Port source < 1024",
                 [0, 1],
-                format_func=lambda x: "Oui — port système" if x else "Non — port dynamique",
+                format_func=lambda x: "Oui - port systeme" if x else "Non - port dynamique",
             )
             is_orig_local = st.selectbox(
                 "IP source locale",
                 [1, 0],
-                format_func=lambda x: "Oui — réseau interne" if x else "Non — adresse externe",
+                format_func=lambda x: "Oui - reseau interne" if x else "Non - adresse externe",
             )
             hour = st.slider("Heure de connexion", 0, 23, 14)
 
         with col3:
-            st.markdown('<div class="section-label">Métriques avancées</div>', unsafe_allow_html=True)
+            st.markdown('<div class="section-label">Metriques avancees</div>', unsafe_allow_html=True)
             orig_ip_bytes = st.number_input("Octets IP source", min_value=0.0, value=600.0)
             resp_ip_bytes = st.number_input("Octets IP destination", min_value=0.0, value=250.0)
-            inter_arrival = st.number_input("Inter-arrivée (secondes)", min_value=0.0, value=0.5)
+            inter_arrival = st.number_input("Inter-arrivee (secondes)", min_value=0.0, value=0.5)
             day_of_week   = st.slider("Jour de la semaine (0 = Lundi)", 0, 6, 1)
 
         submitted = st.form_submit_button("Lancer l'analyse", use_container_width=True)
 
     if submitted:
-        # Computed values inside submission block to avoid redundant rerenders
         pkt_ratio         = orig_pkts / (resp_pkts + 1)
         avg_orig_pkt_size = orig_ip_bytes / (orig_pkts + 1)
         avg_resp_pkt_size = resp_ip_bytes / (resp_pkts + 1)
@@ -779,13 +642,12 @@ elif page == "Analyze Connection":
         prediction = result.get("prediction")
         risk       = result.get("risk_level", "LOW")
         confidence = result.get("confidence", 0)
-        label      = result.get("label", "—")
+        label      = result.get("label", "-")
         message    = result.get("alert_message", "")
-        risk_color = RISK_COLORS.get(risk, {}).get(st.session_state.theme, T["accent"])
 
         card_class = "malicious" if prediction == 1 else "benign"
-        icon = "■" if prediction == 1 else "●"
         icon_color = T["danger"] if prediction == 1 else T["success"]
+        icon = "■" if prediction == 1 else "●"
 
         st.markdown(
             f'<div class="result-card {card_class}">'
@@ -807,16 +669,16 @@ elif page == "Analyze Connection":
 # ============================================================
 elif page == "Alert Log":
     st.title("Alert Log")
-    st.caption("Journal horodaté de toutes les connexions analysées et alertes générées.")
+    st.caption("Journal horodate de toutes les connexions analysees et alertes generees.")
     st.divider()
 
     col_btn, _ = st.columns([1, 6])
     with col_btn:
-        if st.button("Rafraîchir"):
+        if st.button("Rafraichir"):
             st.rerun()
 
     with st.spinner("Chargement du journal..."):
-        data   = api_call("/alerts?limit=100")
+        data = api_call("/alerts?limit=100")
 
     if "error" in data:
         show_api_error(data)
@@ -825,21 +687,18 @@ elif page == "Alert Log":
     alerts = data.get("alertes", [])
 
     if not alerts:
-        st.info("Aucune alerte enregistrée. Utilisez la page 'Analyze Connection' pour analyser des flux réseau.")
+        st.info("Aucune alerte enregistree. Utilisez 'Analyze Connection' pour analyser des flux reseau.")
         st.stop()
 
-    st.metric("Entrées dans le journal", data.get("total", len(alerts)))
+    st.metric("Entrees dans le journal", data.get("total", len(alerts)))
     st.divider()
 
     rows = [
         {
-            "Horodatage":        format_timestamp(a["timestamp"]),
-            "Classification":    a["label"],
-            "Confiance (%)":     a["confidence"],
-            "Niveau de risque":  RISK_LABELS.get(a["risk_level"], a["risk_level"]),
-            "Type":              a.get("attack_type", "—"),
-            "IP source":         a.get("src_ip", "—"),
-            "IP destination":    a.get("dst_ip", "—"),
+            "Horodatage":       format_timestamp(a["timestamp"]),
+            "Classification":   a["label"],
+            "Confiance (%)":    a["confidence"],
+            "Niveau de risque": RISK_LABELS.get(a["risk_level"], a["risk_level"]),
         }
         for a in alerts
     ]
@@ -848,7 +707,6 @@ elif page == "Alert Log":
     st.dataframe(df, use_container_width=True, hide_index=True)
 
     st.divider()
-
     malicious = sum(1 for a in alerts if a["prediction"] == 1)
     benign    = len(alerts) - malicious
 
@@ -857,9 +715,9 @@ elif page == "Alert Log":
     with c1:
         fig_pie = px.pie(
             values=[benign, malicious],
-            names=["Bénin", "Malveillant"],
+            names=["Benin", "Malveillant"],
             color_discrete_sequence=[T["success"], T["danger"]],
-            title="Répartition du trafic analysé",
+            title="Repartition du trafic analyse",
             hole=0.45,
         )
         fig_pie.update_layout(
@@ -867,9 +725,7 @@ elif page == "Alert Log":
             plot_bgcolor=T["plot_bg"],
             font_color=T["text"],
             font_family=T["font_body"],
-            title_font_family=T["font"],
             title_font_size=14,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.25, font_size=12),
             margin=dict(t=40, b=40, l=20, r=20),
         )
         st.plotly_chart(fig_pie, use_container_width=True)
@@ -897,7 +753,6 @@ elif page == "Alert Log":
                 plot_bgcolor=T["plot_bg"],
                 font_color=T["text"],
                 font_family=T["font_body"],
-                title_font_family=T["font"],
                 title_font_size=14,
                 showlegend=False,
                 xaxis=dict(gridcolor=T["grid_color"]),
@@ -912,7 +767,7 @@ elif page == "Alert Log":
 # ============================================================
 elif page == "Statistics":
     st.title("Statistics")
-    st.caption("Vue agrégée des performances du système de détection et distribution des menaces.")
+    st.caption("Vue agregee des performances du systeme de detection et distribution des menaces.")
     st.divider()
 
     with st.spinner("Chargement des statistiques..."):
@@ -927,10 +782,10 @@ elif page == "Statistics":
         st.stop()
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total analyses",      stats.get("total_analyses", 0))
-    c2.metric("Trafic malveillant",  stats.get("trafic_malveillant", 0))
-    c3.metric("Trafic bénin",        stats.get("trafic_benin", 0))
-    c4.metric("Taux de détection",   f"{stats.get('taux_detection', 0)} %")
+    c1.metric("Total analyses",     stats.get("total_analyses", 0))
+    c2.metric("Trafic malveillant", stats.get("trafic_malveillant", 0))
+    c3.metric("Trafic benin",       stats.get("trafic_benin", 0))
+    c4.metric("Taux de detection",  f"{stats.get('taux_detection', 0)} %")
 
     st.divider()
 
@@ -945,14 +800,13 @@ elif page == "Statistics":
                 for k in RISK_COLORS
             },
             title="Distribution des niveaux de risque",
-            labels={"x": "Niveau de risque", "y": "Nombre de détections", "color": "Niveau"},
+            labels={"x": "Niveau de risque", "y": "Nombre de detections"},
         )
         fig_bar.update_layout(
             paper_bgcolor=T["plot_bg"],
             plot_bgcolor=T["plot_bg"],
             font_color=T["text"],
             font_family=T["font_body"],
-            title_font_family=T["font"],
             title_font_size=14,
             showlegend=False,
             xaxis=dict(gridcolor=T["grid_color"]),
@@ -961,27 +815,149 @@ elif page == "Statistics":
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
-    additional = stats.get("par_heure", None)
-    if additional:
-        fig_line = go.Figure()
-        fig_line.add_trace(go.Scatter(
-            x=list(additional.keys()),
-            y=list(additional.values()),
-            mode="lines+markers",
-            line=dict(color=T["accent"], width=2),
-            marker=dict(color=T["accent2"], size=6),
-            name="Détections / heure",
-        ))
-        fig_line.update_layout(
-            title="Activité de détection par heure",
+
+# ============================================================
+# PAGE 5 — PDF REPORT  ← NOUVELLE PAGE
+# ============================================================
+elif page == "PDF Report":
+    st.title("PDF Report")
+    st.caption("Generez et telechargez un rapport PDF complet des incidents detectes.")
+    st.divider()
+
+    # --- Apercu des stats avant generation ---
+    with st.spinner("Chargement des donnees..."):
+        stats = api_call("/stats")
+        alerts_data = api_call("/alerts?limit=100")
+
+    if "error" in stats or "error" in alerts_data:
+        st.warning("Impossible de charger les donnees. Verifiez que l'API est en ligne.")
+        st.stop()
+
+    # Si pas d'alertes
+    if "message" in stats:
+        st.info("Aucune analyse effectuee. Allez dans 'Analyze Connection' pour analyser des connexions reseau d'abord.")
+        st.stop()
+
+    # --- Statistiques resumees ---
+    st.subheader("Apercu du rapport")
+    st.markdown('<div class="section-label">Contenu qui sera inclus dans le PDF</div>',
+                unsafe_allow_html=True)
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Total analyses",     stats.get("total_analyses", 0))
+    c2.metric("Malveillants",       stats.get("trafic_malveillant", 0))
+    c3.metric("Benins",             stats.get("trafic_benin", 0))
+    c4.metric("Taux detection",     f"{stats.get('taux_detection', 0)} %")
+
+    st.divider()
+
+    # --- Contenu du rapport ---
+    st.subheader("Contenu du rapport PDF")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(
+            f"""
+            <div class="info-block">
+            <strong>Page 1 - Resume executif</strong><br>
+            · Informations du systeme<br>
+            · Total connexions analysees<br>
+            · Connexions malveillantes vs benignes<br>
+            · Periode analysee<br>
+            · Distribution des niveaux de risque<br><br>
+
+            <strong>Page 2 - Journal des alertes</strong><br>
+            · 50 dernieres alertes horodatees<br>
+            · Classification + confiance + niveau de risque<br>
+            · Message de chaque alerte
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col2:
+        st.markdown(
+            f"""
+            <div class="info-block">
+            <strong>Page 3 - Recommandations</strong><br>
+            · Recommandations de securite automatiques<br>
+            · Basees sur les alertes detectees<br>
+            · Actions prioritaires pour l'equipe SOC<br><br>
+
+            <strong>Informations techniques</strong><br>
+            · Framework ML utilise<br>
+            · Version et hebergement<br>
+            · Signature et date de generation<br>
+            · Marque Confidentiel
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    # --- Distribution des risques ---
+    risk_levels = stats.get("niveaux_risque", {})
+    if risk_levels:
+        fig = px.pie(
+            values=list(risk_levels.values()),
+            names=[RISK_LABELS.get(k, k) for k in risk_levels],
+            color=list(risk_levels.keys()),
+            color_discrete_map={
+                RISK_LABELS.get(k, k): RISK_COLORS[k].get(st.session_state.theme, "#888")
+                for k in RISK_COLORS
+            },
+            title="Distribution des risques (apercu)",
+            hole=0.4,
+        )
+        fig.update_layout(
             paper_bgcolor=T["plot_bg"],
             plot_bgcolor=T["plot_bg"],
             font_color=T["text"],
             font_family=T["font_body"],
-            title_font_family=T["font"],
             title_font_size=14,
-            xaxis=dict(title="Heure", gridcolor=T["grid_color"]),
-            yaxis=dict(title="Détections", gridcolor=T["grid_color"]),
             margin=dict(t=40, b=20, l=20, r=20),
         )
-        st.plotly_chart(fig_line, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
+
+    # --- BOUTON DE TELECHARGEMENT ---
+    st.subheader("Telecharger le rapport")
+
+    col_btn, col_info = st.columns([1, 2])
+
+    with col_btn:
+        if st.button("Generer et telecharger le PDF", use_container_width=True):
+            with st.spinner("Generation du rapport PDF en cours..."):
+                pdf_bytes = api_call_raw("/report")
+
+            if pdf_bytes is None:
+                st.error("Erreur lors de la generation du PDF. Verifiez que l'API est en ligne.")
+            else:
+                from datetime import datetime
+                nom_fichier = f"rapport_itgate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+                st.success("Rapport PDF genere avec succes !")
+                st.download_button(
+                    label="Cliquez ici pour telecharger le PDF",
+                    data=pdf_bytes,
+                    file_name=nom_fichier,
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+
+    with col_info:
+        st.markdown(
+            f"""
+            <div class="info-block">
+            <strong>Format :</strong> PDF 3 pages<br>
+            <strong>Langue :</strong> Francais<br>
+            <strong>Modele :</strong> Random Forest (99.49% accuracy)<br>
+            <strong>Mise a jour :</strong> En temps reel<br>
+            <strong>Confidentialite :</strong> Marque Confidentiel ITGATE
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
