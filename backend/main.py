@@ -9,6 +9,8 @@ import pandas as pd
 from datetime import datetime
 from typing import List
 import os
+from pdf_report import generer_rapport_pdf
+from fastapi.responses import Response
 
 app = FastAPI(
     title="API Détection d'Anomalies Réseau — ITGATE PFE 2026",
@@ -197,6 +199,28 @@ def statistiques():
             for level in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
         }
     }
+
+@app.get("/report", tags=["Rapport"])
+def generer_rapport():
+    """
+    📄 Générer un rapport PDF des incidents détectés.
+    Télécharge automatiquement un fichier PDF.
+    """
+    if not alert_history:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucune alerte disponible pour générer un rapport"
+        )
+    try:
+        pdf_bytes = generer_rapport_pdf(alert_history)
+        nom_fichier = f"rapport_anomalies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={nom_fichier}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur génération PDF: {str(e)}")
 
 @app.delete("/alerts/clear", tags=["Alertes"])
 def vider_alertes():
