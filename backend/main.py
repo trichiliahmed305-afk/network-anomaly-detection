@@ -13,8 +13,8 @@ from pdf_report import generer_rapport_pdf
 from fastapi.responses import Response
 
 app = FastAPI(
-    title="API Détection d'Anomalies Réseau — ITGATE PFE 2026",
-    description="Système ML de détection d'intrusions réseau en temps réel",
+    title="API Detection d'Anomalies Reseau — ITGATE PFE 2026",
+    description="Systeme ML de detection d'intrusions reseau en temps reel",
     version="1.0.0"
 )
 
@@ -25,39 +25,65 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ============================================================
+# CHARGEMENT DES MODELES
+# ============================================================
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 
 def charger_modele(nom_fichier):
     chemin = os.path.join(MODELS_DIR, nom_fichier)
     return joblib.load(chemin)
 
+MODELS = {}
+scaler = None
+feature_names = []
+
 try:
-    rf_model = charger_modele('rf_model.pkl')
-    scaler   = charger_modele('scaler.pkl')
+    scaler = charger_modele('scaler.pkl')
     with open(os.path.join(MODELS_DIR, 'feature_names.json')) as f:
         feature_names = json.load(f)
-    try:
-        iso_model = charger_modele('iso_model.pkl')
-        print("✅ iso_model.pkl chargé")
-    except Exception:
-        iso_model = None
-        print("⚠️ iso_model.pkl absent — ignoré")
-    print("✅ Modèles principaux chargés avec succès!")
+
+    model_files = {
+        'random_forest':    'rf_model.pkl',
+        'xgboost':          'xgb_model.pkl',
+        'svm':              'svm_model.pkl',
+        'knn':              'knn_model.pkl',
+        'decision_tree':    'dt_model.pkl',
+        'isolation_forest': 'iso_model.pkl',
+    }
+
+    for key, filename in model_files.items():
+        try:
+            MODELS[key] = charger_modele(filename)
+            print(f"✅ {key} charge")
+        except Exception as e:
+            print(f"⚠️ {key} non disponible: {e}")
+
+    print(f"✅ {len(MODELS)} modeles charges: {list(MODELS.keys())}")
+
 except Exception as e:
-    print(f"❌ Erreur chargement modèles: {e}")
-    rf_model = iso_model = scaler = None
+    print(f"❌ Erreur chargement: {e}")
+    MODELS = {}
+    scaler = None
     feature_names = []
+
+# Compatibilite
+rf_model  = MODELS.get('random_forest')
+iso_model = MODELS.get('isolation_forest')
 
 alert_history: List[dict] = []
 
-# Colonnes que le scaler connaît (9 colonnes numériques)
+# Colonnes normalisees par le scaler
 SCALER_COLS = [
     'duration', 'orig_bytes', 'resp_bytes', 'orig_pkts',
     'resp_pkts', 'orig_ip_bytes', 'resp_ip_bytes',
     'inter_arrival_time', 'pkt_ratio'
 ]
 
+# ============================================================
+# FONCTIONS UTILITAIRES
+# ============================================================
 def determine_risk_level(confidence: float, prediction: int) -> str:
     if prediction == 0:
         return "LOW"
@@ -71,7 +97,6 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
         return "LOW"
 
 def preparer_features(data: TrafficData) -> pd.DataFrame:
-    """Transforme les données en DataFrame avec les 21 features exactes du modèle"""
     features = {
         'id.orig_p':          data.id_orig_p,
         'id.resp_p':          data.id_resp_p,
@@ -96,66 +121,76 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
         'avg_resp_pkt_size':  data.avg_resp_pkt_size,
     }
     df = pd.DataFrame([features])
-
-    # Normaliser seulement les 9 colonnes que le scaler connaît
     df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
-
-    # Retourner dans l'ordre exact du modèle RF
     return df[feature_names]
 
+# ============================================================
+# ENDPOINTS
+# ============================================================
 @app.get("/", tags=["Status"])
 def racine():
     return {
-        "message": "🛡️ API Détection Anomalies Réseau — ITGATE PFE 2026",
+        "message": "API Detection Anomalies Reseau — ITGATE PFE 2026",
         "status": "operational",
-        "modeles_charges": rf_model is not None,
+        "modeles_charges": len(MODELS) > 0,
+        "nb_modeles": len(MODELS),
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/status", tags=["Status"])
 def statut():
+    modeles_status = {key: "loaded" for key in MODELS.keys()}
+    modeles_status["scaler"] = "loaded" if scaler else "error"
     return {
         "api_status": "online",
-        "modeles": {
-            "random_forest": "loaded" if rf_model else "error",
-            "isolation_forest": "loaded" if iso_model else "absent",
-            "scaler": "loaded" if scaler else "error",
-        },
+        "modeles": modeles_status,
         "total_alertes": len(alert_history),
         "timestamp": datetime.now().isoformat()
     }
 
-@app.post("/predict", response_model=PredictionResult, tags=["Prédiction"])
+@app.post("/predict", response_model=PredictionResult, tags=["Prediction"])
 def predire(data: TrafficData):
-    """🔮 Analyser une connexion réseau et détecter les anomalies."""
-    if rf_model is None:
-        raise HTTPException(status_code=503, detail="Modèles non disponibles")
+    """Analyser une connexion reseau et detecter les anomalies."""
+    if not MODELS or scaler is None:
+        raise HTTPException(status_code=503, detail="Modeles non disponibles")
     try:
-        # 1. Préparer et normaliser les features
+        # 1. Choisir le modele demande
+        model_key = getattr(data, 'model', 'random_forest') or 'random_forest'
+        if model_key not in MODELS:
+            model_key = 'random_forest'
+        model = MODELS[model_key]
+
+        # 2. Preparer les features
         X = preparer_features(data)
 
-        # 2. Prédire directement (scaler déjà appliqué dans preparer_features)
-        prediction = int(rf_model.predict(X)[0])
-        probas = rf_model.predict_proba(X)[0]
-        confidence = round(float(max(probas)) * 100, 2)
+        # 3. Predire selon le type de modele
+        if model_key == 'isolation_forest':
+            raw_pred = model.predict(X)[0]
+            prediction = 1 if raw_pred == -1 else 0
+            scores = model.score_samples(X)
+            confidence = round(min(abs(float(scores[0])) * 100, 99.9), 2)
+        else:
+            prediction = int(model.predict(X)[0])
+            probas     = model.predict_proba(X)[0]
+            confidence = round(float(max(probas)) * 100, 2)
 
-        # 3. Déterminer le niveau de risque
+        # 4. Resultat
         risk_level = determine_risk_level(confidence, prediction)
-        label = "Malicious" if prediction == 1 else "Benign"
-        alert_msg = (
-            f"🚨 ALERTE : Trafic malveillant détecté ! Confiance : {confidence}%"
+        label      = "Malicious" if prediction == 1 else "Benign"
+        alert_msg  = (
+            f"Trafic malveillant detecte ! Confiance : {confidence}%"
             if prediction == 1
-            else f"✅ Trafic normal. Confiance : {confidence}%"
+            else f"Trafic normal. Confiance : {confidence}%"
         )
 
-        # 4. Enregistrer dans l'historique
         alert_entry = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp":  datetime.now().isoformat(),
             "prediction": prediction,
-            "label": label,
+            "label":      label,
             "confidence": confidence,
             "risk_level": risk_level,
-            "data": data.dict()
+            "model":      model_key,
+            "data":       data.dict()
         }
         alert_history.append(alert_entry)
         if len(alert_history) > 1000:
@@ -166,15 +201,15 @@ def predire(data: TrafficData):
             label=label,
             confidence=confidence,
             risk_level=risk_level,
-            model_used="Random Forest",
+            model_used=model_key,
             alert_message=alert_msg
         )
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur de prédiction: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur de prediction: {str(e)}")
 
 @app.get("/alerts", tags=["Alertes"])
 def obtenir_alertes(limit: int = 50):
-    """📋 Récupérer les dernières alertes générées"""
     return {
         "total": len(alert_history),
         "alertes": alert_history[-limit:][::-1]
@@ -182,18 +217,17 @@ def obtenir_alertes(limit: int = 50):
 
 @app.get("/stats", tags=["Statistiques"])
 def statistiques():
-    """📊 Statistiques globales du système de détection"""
     if not alert_history:
-        return {"message": "Aucune analyse effectuée pour l'instant"}
-    total = len(alert_history)
+        return {"message": "Aucune analyse effectuee pour l'instant"}
+    total        = len(alert_history)
     malveillants = sum(1 for a in alert_history if a['prediction'] == 1)
-    benins = total - malveillants
+    benins       = total - malveillants
     return {
-        "total_analyses": total,
+        "total_analyses":    total,
         "trafic_malveillant": malveillants,
-        "trafic_benin": benins,
-        "taux_detection": round((malveillants / total) * 100, 2) if total > 0 else 0,
-        "derniere_alerte": alert_history[-1]['timestamp'] if alert_history else None,
+        "trafic_benin":      benins,
+        "taux_detection":    round((malveillants / total) * 100, 2) if total > 0 else 0,
+        "derniere_alerte":   alert_history[-1]['timestamp'] if alert_history else None,
         "niveaux_risque": {
             level: sum(1 for a in alert_history if a['risk_level'] == level)
             for level in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
@@ -202,17 +236,10 @@ def statistiques():
 
 @app.get("/report", tags=["Rapport"])
 def generer_rapport():
-    """
-    📄 Générer un rapport PDF des incidents détectés.
-    Télécharge automatiquement un fichier PDF.
-    """
     if not alert_history:
-        raise HTTPException(
-            status_code=404,
-            detail="Aucune alerte disponible pour générer un rapport"
-        )
+        raise HTTPException(status_code=404, detail="Aucune alerte disponible")
     try:
-        pdf_bytes = generer_rapport_pdf(alert_history)
+        pdf_bytes   = generer_rapport_pdf(alert_history)
         nom_fichier = f"rapport_anomalies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         return Response(
             content=pdf_bytes,
@@ -220,10 +247,9 @@ def generer_rapport():
             headers={"Content-Disposition": f"attachment; filename={nom_fichier}"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur génération PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur generation PDF: {str(e)}")
 
 @app.delete("/alerts/clear", tags=["Alertes"])
 def vider_alertes():
-    """🗑️ Vider l'historique des alertes"""
     alert_history.clear()
-    return {"message": "Historique des alertes vidé", "timestamp": datetime.now().isoformat()}
+    return {"message": "Historique des alertes vide", "timestamp": datetime.now().isoformat()}
