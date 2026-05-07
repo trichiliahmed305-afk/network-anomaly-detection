@@ -94,6 +94,7 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
 def preparer_features(data: TrafficData) -> pd.DataFrame:
     features = {
         'id.orig_p':          data.id_orig_p,
+        'id.resp_p':          data.id_resp_p,   # ← remettre
         'duration':           data.duration,
         'orig_bytes':         data.orig_bytes,
         'resp_bytes':         data.resp_bytes,
@@ -114,6 +115,9 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
         'avg_orig_pkt_size':  data.avg_orig_pkt_size,
         'avg_resp_pkt_size':  data.avg_resp_pkt_size,
     }
+    df = pd.DataFrame([features])
+    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
+    return df[feature_names]
     df = pd.DataFrame([features])
     df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
     return df[feature_names]
