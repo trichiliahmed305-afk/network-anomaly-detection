@@ -1,76 +1,112 @@
-﻿import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiService } from "../services/api";
 import { MODELS_INFO } from "../constants/theme";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const ATTACK_SCENARIOS = [
-  { id: "mirai_telnet",  label: "Mirai Telnet Scan",       icon: "[SCAN]",   color: "#ef4444", desc: "Scan Telnet signature reelle Mirai", payload: { id_orig_p: 51524.0, id_resp_p: 23.0, duration: 0.0102, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.05, orig_ip_bytes: 0.0602, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 3.0, is_well_known_port: 1, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 2.93e-9, pkt_ratio: 0.1765, avg_orig_pkt_size: 45.0, avg_resp_pkt_size: 0.0 } },
-  { id: "mirai_rapide",  label: "Mirai Scan Rapide",        icon: "[FAST]",   color: "#f97316", desc: "Variante rapide du scan Mirai",      payload: { id_orig_p: 56305.0, id_resp_p: 23.0, duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.0167, orig_ip_bytes: 0.0201, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 2.0, is_well_known_port: 1, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 3.67e-8, pkt_ratio: 0.0588, avg_orig_pkt_size: 30.0, avg_resp_pkt_size: 0.0 } },
-  { id: "mirai_port23",  label: "Mirai Port 23 Massif",     icon: "[DDOS]",   color: "#dc2626", desc: "Scan massif port 23 botnet IoT",     payload: { id_orig_p: 60905.0, id_resp_p: 23.0, duration: 0.0102, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.05, orig_ip_bytes: 0.0602, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 3.0, is_well_known_port: 1, hour: 3, minute: 0, day_of_week: 6, inter_arrival_time: 2.97e-9, pkt_ratio: 0.1765, avg_orig_pkt_size: 45.0, avg_resp_pkt_size: 0.0 } },
-  { id: "normal_port",   label: "Trafic Normal",             icon: "[OK]",     color: "#22c55e", desc: "Connexion legitime port aleatoire",  payload: { id_orig_p: 43763.0, id_resp_p: 14336.0, duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0, is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 0.0, pkt_ratio: 0.0588, avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0 } },
-  { id: "normal_11764",  label: "Trafic Normal DNS",         icon: "[DNS]",    color: "#06b6d4", desc: "Connexion reseau normale port 11764", payload: { id_orig_p: 43763.0, id_resp_p: 11764.0, duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0, is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 3.85e-6, pkt_ratio: 0.0588, avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0 } },
-  { id: "normal_bidi",   label: "Trafic Bidirectionnel",     icon: "[BIDI]",   color: "#10b981", desc: "Echange bidirectionnel normal",      payload: { id_orig_p: 34243.0, id_resp_p: 49560.0, duration: 0.0102, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.05, orig_ip_bytes: 0.0602, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 3.0, is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 2.97e-9, pkt_ratio: 0.1765, avg_orig_pkt_size: 45.0, avg_resp_pkt_size: 0.0 } },
+  // ── ATTAQUES MALVEILLANTES ───────────────────────────────
+  {
+    id:"mirai_telnet", label:"Mirai — Scan Telnet", icon:"[SCAN]", color:"#ef4444",
+    desc:"Scan port 23 — signature botnet Mirai IoT",
+    payload:{id_orig_p:53854,id_resp_p:23,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:60,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:2.93e-9,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
+  },
+  {
+    id:"port_scan_9527", label:"Port Scan — Port 9527", icon:"[SCAN]", color:"#f97316",
+    desc:"Scan horizontal port non standard 9527",
+    payload:{id_orig_p:36495,id_resp_p:9527,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:60,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:2,minute:15,day_of_week:5,inter_arrival_time:3.67e-8,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
+  },
+  {
+    id:"port_scan_double", label:"Port Scan — Double Paquet", icon:"[SCAN]", color:"#dc2626",
+    desc:"Scan avec 2 paquets — tentative de connexion",
+    payload:{id_orig_p:56144,id_resp_p:9527,duration:0.998941,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:2,orig_ip_bytes:120,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:4,minute:30,day_of_week:6,inter_arrival_time:2.97e-9,pkt_ratio:0.1176,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
+  },
+  {
+    id:"brute_force_ssh", label:"Brute Force — SSH", icon:"[BRF]", color:"#8b5cf6",
+    desc:"Tentatives repetees authentification SSH port 22",
+    payload:{id_orig_p:45678,id_resp_p:22,duration:0.5,orig_bytes:200,resp_bytes:50,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.06,resp_pkts:0,resp_ip_bytes:0,is_orig_local:0,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:2,minute:30,day_of_week:5,inter_arrival_time:0.05,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
+  },
+  {
+    id:"ddos_flood", label:"DDoS — Flood Massif", icon:"[DOS]", color:"#ec4899",
+    desc:"Flood UDP massif vers port 80",
+    payload:{id_orig_p:9999,id_resp_p:80,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:0,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:0.0001,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
+  },
+  {
+    id:"botnet_c2", label:"Botnet — C2 Communication", icon:"[BOT]", color:"#f59e0b",
+    desc:"Communication Command and Control IRC port 6667",
+    payload:{id_orig_p:22222,id_resp_p:6667,duration:300,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:3,resp_h_count:1,is_well_known_port:0,hour:3,minute:30,day_of_week:6,inter_arrival_time:6,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
+  },
+  // ── TRAFIC NORMAL ────────────────────────────────────────
+  {
+    id:"normal_udp", label:"Normal — UDP Port Aleatoire", icon:"[OK]", color:"#22c55e",
+    desc:"Connexion UDP legitime vers port non standard",
+    payload:{id_orig_p:43763,id_resp_p:41534,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
+  },
+  {
+    id:"normal_30672", label:"Normal — Connexion Standard", icon:"[OK]", color:"#06b6d4",
+    desc:"Trafic reseau legitime typique",
+    payload:{id_orig_p:43763,id_resp_p:30672,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:14,minute:20,day_of_week:1,inter_arrival_time:3.85e-6,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
+  },
+  {
+    id:"normal_web", label:"Normal — Navigation Web", icon:"[OK]", color:"#10b981",
+    desc:"Trafic HTTP normal depuis reseau interne",
+    payload:{id_orig_p:43763,id_resp_p:44078,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:10,minute:45,day_of_week:3,inter_arrival_time:1.14e-7,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
+  },
 ];
 
-function SelectCard({ item, selected, onClick, type }) {
-  const isSelected = selected?.id === item.id || selected?.key === item.key;
-  const isDisabled = type === "model" && item.available === false;
-  const itemColor  = isDisabled ? "#4b5563" : item.color;
-  return (
-    <button onClick={() => !isDisabled && onClick(item)} disabled={isDisabled}
-      style={{ background: isSelected ? itemColor+"15":"#1f2937", border:`2px solid ${isSelected?itemColor:isDisabled?"#2d3748":"#374151"}`, borderRadius:10, padding:"12px 14px", cursor:isDisabled?"not-allowed":"pointer", textAlign:"left", transition:"all 0.2s ease", width:"100%", opacity:isDisabled?0.45:1, transform:isSelected?"translateY(-1px)":"none", boxShadow:isSelected?`0 4px 16px ${itemColor}25`:"none" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <span style={{ fontSize:"0.85rem", fontWeight:700, color:itemColor, fontFamily:"monospace", flexShrink:0, background:itemColor+"20", padding:"2px 6px", borderRadius:4 }}>{item.icon}</span>
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontWeight:700, fontSize:"0.85rem", color:isSelected?itemColor:isDisabled?"#6b7280":"#f1f5f9", fontFamily:"JetBrains Mono, monospace", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.name||item.label}</div>
-          <div style={{ fontSize:"0.7rem", color:"#9ca3af", marginTop:1 }}>{item.desc}</div>
-        </div>
-        {isSelected && !isDisabled && <span style={{ fontSize:"0.65rem", fontWeight:700, padding:"2px 7px", borderRadius:999, background:itemColor+"30", color:itemColor, flexShrink:0 }}>OK</span>}
-      </div>
-      {type === "model" && (
-        <div style={{ marginTop:8, display:"flex", gap:12, alignItems:"center" }}>
-          <span style={{ fontSize:"0.7rem", color:"#9ca3af" }}>Acc: <strong style={{ color:itemColor }}>{item.acc}%</strong></span>
-          <span style={{ fontSize:"0.7rem", color:"#9ca3af" }}>F1: <strong style={{ color:itemColor }}>{item.f1}%</strong></span>
-          <span style={{ marginLeft:"auto", fontSize:"0.62rem", fontWeight:700, padding:"1px 7px", borderRadius:999, background:"rgba(34,197,94,0.15)", color:"#22c55e" }}>Actif</span>
-        </div>
-      )}
-    </button>
-  );
-}
+const MANUAL_FIELDS = [
+  {key:"id_orig_p",          label:"Port Source",           default:51524},
+  {key:"id_resp_p",          label:"Port Destination",      default:23},
+  {key:"duration",           label:"Duration",              default:0.001},
+  {key:"orig_bytes",         label:"Orig Bytes",            default:0},
+  {key:"resp_bytes",         label:"Resp Bytes",            default:0},
+  {key:"missed_bytes",       label:"Missed Bytes",          default:0},
+  {key:"orig_pkts",          label:"Orig Pkts",             default:0.05},
+  {key:"orig_ip_bytes",      label:"Orig IP Bytes",         default:0.06},
+  {key:"resp_pkts",          label:"Resp Pkts",             default:0},
+  {key:"resp_ip_bytes",      label:"Resp IP Bytes",         default:0},
+  {key:"is_orig_local",      label:"Is Orig Local (0/1)",   default:1},
+  {key:"orig_h_count",       label:"Orig H Count",          default:991061},
+  {key:"resp_h_count",       label:"Resp H Count",          default:3},
+  {key:"is_well_known_port", label:"Well Known Port (0/1)", default:1},
+  {key:"hour",               label:"Heure (0-23)",          default:15},
+  {key:"minute",             label:"Minute (0-59)",         default:30},
+  {key:"day_of_week",        label:"Jour Semaine (0-6)",    default:2},
+  {key:"inter_arrival_time", label:"Inter Arrival Time",    default:0.000000003},
+  {key:"pkt_ratio",          label:"Pkt Ratio",             default:0.1765},
+  {key:"avg_orig_pkt_size",  label:"Avg Orig Pkt Size",     default:45},
+  {key:"avg_resp_pkt_size",  label:"Avg Resp Pkt Size",     default:0},
+];
 
-function ResultPanel({ result, selectedModel, selectedAttack }) {
+function ResultCard({result, selectedModel, selectedScenario}) {
   if (!result) return null;
-  const isM  = result.label === "Malicious";
-  const conf = result.confidence;
+  const isM = result.label === "Malicious";
   const color = isM ? "#ef4444" : "#22c55e";
-  const riskColor = { LOW:"#22c55e", MEDIUM:"#f59e0b", HIGH:"#f97316", CRITICAL:"#ef4444" };
+  const riskColor = {LOW:"#22c55e",MEDIUM:"#f59e0b",HIGH:"#f97316",CRITICAL:"#ef4444"};
   return (
-    <div style={{ background:isM?"rgba(239,68,68,0.06)":"rgba(34,197,94,0.06)", border:`2px solid ${color}`, borderRadius:14, padding:"20px 24px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:18 }}>
-        <div style={{ fontSize:"1.5rem", background:color+"15", borderRadius:"50%", width:52, height:52, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, color }}>{isM?"!":"OK"}</div>
-        <div style={{ flex:1 }}>
-          <div style={{ fontSize:"1.3rem", fontWeight:800, color, fontFamily:"JetBrains Mono, monospace" }}>{isM?"MALICIOUS":"BENIGN"}</div>
-          <div style={{ fontSize:"0.78rem", color:"#9ca3af" }}>{isM?"Comportement malveillant detecte":"Trafic legitime identifie"}</div>
+    <div style={{background:isM?"rgba(239,68,68,0.06)":"rgba(34,197,94,0.06)",border:`2px solid ${color}`,borderRadius:14,padding:"20px 24px"}}>
+      <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}>
+        <div style={{fontSize:"1.5rem",background:color+"15",borderRadius:"50%",width:50,height:50,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,color}}>{isM?"!":"OK"}</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:"1.2rem",fontWeight:800,color,fontFamily:"JetBrains Mono, monospace"}}>{isM?"MALICIOUS":"BENIGN"}</div>
+          <div style={{fontSize:"0.75rem",color:"#9ca3af"}}>{isM?"Comportement malveillant detecte":"Trafic legitime identifie"}</div>
         </div>
-        <div style={{ textAlign:"right" }}>
-          <div style={{ fontSize:"1.8rem", fontWeight:800, color, fontFamily:"JetBrains Mono, monospace" }}>{conf}%</div>
-          <div style={{ fontSize:"0.7rem", color:"#9ca3af" }}>Confiance</div>
-        </div>
-      </div>
-      <div style={{ marginBottom:16 }}>
-        <div style={{ background:"#1f2937", borderRadius:6, height:7, overflow:"hidden" }}>
-          <div style={{ width:`${conf}%`, height:"100%", background:`linear-gradient(90deg, ${color}70, ${color})`, borderRadius:6, transition:"width 1s ease" }} />
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:"1.6rem",fontWeight:800,color,fontFamily:"JetBrains Mono, monospace"}}>{result.confidence}%</div>
+          <div style={{fontSize:"0.68rem",color:"#9ca3af"}}>Confiance</div>
         </div>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+      <div style={{background:"#1f2937",borderRadius:6,height:6,overflow:"hidden",marginBottom:14}}>
+        <div style={{width:`${result.confidence}%`,height:"100%",background:`linear-gradient(90deg,${color}70,${color})`,borderRadius:6,transition:"width 1s ease"}}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
         {[
-          { label:"Modele",    value:selectedModel?.name||"—",   color:selectedModel?.color||"#3b82f6" },
-          { label:"Scenario",  value:selectedAttack?.label||"—", color:selectedAttack?.color||"#9ca3af" },
-          { label:"Risque",    value:result.risk_level||"—",     color:riskColor[result.risk_level]||"#9ca3af" },
-        ].map(({ label, value, color:c }) => (
-          <div key={label} style={{ background:"#111827", border:"1px solid #1f2937", borderRadius:8, padding:"10px 12px" }}>
-            <div style={{ fontSize:"0.65rem", color:"#6b7280", textTransform:"uppercase", marginBottom:3 }}>{label}</div>
-            <div style={{ fontSize:"0.82rem", fontWeight:700, color:c }}>{value}</div>
+          {label:"Modele",   value:selectedModel?.name||"RF",              c:selectedModel?.color||"#3b82f6"},
+          {label:"Scenario", value:selectedScenario?.label||"Manuel",      c:selectedScenario?.color||"#9ca3af"},
+          {label:"Risque",   value:result.risk_level||"LOW",               c:riskColor[result.risk_level]||"#22c55e"},
+        ].map(({label,value,c})=>(
+          <div key={label} style={{background:"#111827",border:"1px solid #1f2937",borderRadius:8,padding:"8px 10px"}}>
+            <div style={{fontSize:"0.62rem",color:"#6b7280",textTransform:"uppercase",marginBottom:2}}>{label}</div>
+            <div style={{fontSize:"0.8rem",fontWeight:700,color:c,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{value}</div>
           </div>
         ))}
       </div>
@@ -78,72 +114,307 @@ function ResultPanel({ result, selectedModel, selectedAttack }) {
   );
 }
 
-export default function PredictForm({ onResult, mappings }) {
+function BatchResults({data}) {
+  if (!data) return null;
+  const {total,malicious,benign,taux_detection,results} = data;
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10}}>
+        {[
+          {label:"Total",       value:total,              color:"#3b82f6"},
+          {label:"Malveillant", value:malicious,          color:"#ef4444"},
+          {label:"Benin",       value:benign,             color:"#22c55e"},
+          {label:"Taux",        value:`${taux_detection}%`,color:"#f59e0b"},
+        ].map(({label,value,color})=>(
+          <div key={label} style={{background:"#111827",border:`1px solid ${color}30`,borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
+            <div style={{fontSize:"1.4rem",fontWeight:800,color,fontFamily:"JetBrains Mono, monospace"}}>{value}</div>
+            <div style={{fontSize:"0.68rem",color:"#9ca3af",textTransform:"uppercase",marginTop:2}}>{label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{maxHeight:280,overflowY:"auto",borderRadius:10,border:"1px solid #1f2937"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:"0.78rem"}}>
+          <thead>
+            <tr style={{background:"#1f2937"}}>
+              {["#","Classification","Confiance","Risque"].map(h=>(
+                <th key={h} style={{padding:"8px 12px",textAlign:"left",color:"#9ca3af",fontSize:"0.68rem",textTransform:"uppercase"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((r,i)=>(
+              <tr key={i} style={{borderBottom:"1px solid #1f293740",background:i%2===0?"#0a0e1a":"transparent"}}>
+                <td style={{padding:"6px 12px",color:"#6b7280"}}>{r.index+1}</td>
+                <td style={{padding:"6px 12px",color:r.label==="Malicious"?"#ef4444":"#22c55e",fontWeight:600}}>{r.label}</td>
+                <td style={{padding:"6px 12px",color:"#f1f5f9"}}>{r.confidence}%</td>
+                <td style={{padding:"6px 12px",color:r.risk_level==="LOW"?"#22c55e":r.risk_level==="MEDIUM"?"#f59e0b":"#ef4444"}}>{r.risk_level}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+export default function PredictForm({onResult}) {
   const isMobile = useIsMobile();
-  const [selectedModel,  setSelectedModel]  = useState(MODELS_INFO[3]);
-  const [selectedAttack, setSelectedAttack] = useState(null);
-  const [loading,        setLoading]        = useState(false);
-  const [result,         setResult]         = useState(null);
-  const [error,          setError]          = useState(null);
+  const [activeTab,        setActiveTab]        = useState("scenarios");
+  const [selectedModel,    setSelectedModel]    = useState(MODELS_INFO[3]);
+  const [selectedScenario, setSelectedScenario] = useState(null);
+  const [loadingScenario,  setLoadingScenario]  = useState(false);
+  const [resultScenario,   setResultScenario]   = useState(null);
+  const [batchFile,        setBatchFile]        = useState(null);
+  const [loadingBatch,     setLoadingBatch]     = useState(false);
+  const [batchResults,     setBatchResults]     = useState(null);
+  const [batchError,       setBatchError]       = useState(null);
+  const fileInputRef = useRef(null);
+  const initManual = () => Object.fromEntries(MANUAL_FIELDS.map(f=>[f.key,f.default]));
+  const [manualForm,    setManualForm]    = useState(initManual);
+  const [loadingManual, setLoadingManual] = useState(false);
+  const [resultManual,  setResultManual]  = useState(null);
+  const [manualError,   setManualError]   = useState(null);
+  const [manualModel,   setManualModel]   = useState(MODELS_INFO[3]);
 
-  const canAnalyze = selectedModel && selectedAttack && !loading;
-
-  const runAnalysis = async () => {
-    if (!canAnalyze) return;
-    setLoading(true); setResult(null); setError(null);
-    const payload = { ...selectedAttack.payload, model: selectedModel.key };
+  const runScenario = async () => {
+    if (!selectedModel || !selectedScenario) return;
+    setLoadingScenario(true); setResultScenario(null);
     try {
-      const { data } = await apiService.predict(payload);
-      setResult(data); onResult?.();
-    } catch (e) {
-      setError(e.response?.data?.detail || e.message);
-    }
-    setLoading(false);
+      const {data} = await apiService.predict({...selectedScenario.payload, model:selectedModel.key});
+      setResultScenario(data); onResult?.();
+    } catch(e){console.error(e);}
+    setLoadingScenario(false);
   };
 
-  return (
-    <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
-      <div>
-        <h2 style={{ fontFamily:"JetBrains Mono, monospace", fontSize:"1rem", marginBottom:4 }}>Systeme d Analyse</h2>
-        <p style={{ fontSize:"0.8rem", color:"#9ca3af" }}>Scenarios bases sur de vraies donnees CTU-IoT. Selectionnez un modele et un scenario.</p>
+  const runBatch = async () => {
+    if (!batchFile) return;
+    setLoadingBatch(true); setBatchResults(null); setBatchError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", batchFile);
+      const {data} = await apiService.predictBatch(formData);
+      setBatchResults(data); onResult?.();
+    } catch(e){ setBatchError(e.response?.data?.detail||e.message); }
+    setLoadingBatch(false);
+  };
+
+  const runManual = async () => {
+    setLoadingManual(true); setResultManual(null); setManualError(null);
+    try {
+      const {data} = await apiService.predict({...manualForm, model:manualModel.key});
+      setResultManual(data); onResult?.();
+    } catch(e){ setManualError(e.response?.data?.detail||e.message); }
+    setLoadingManual(false);
+  };
+
+  const tabStyle = (tab) => ({
+    padding:"9px 18px", border:`2px solid ${activeTab===tab?"#3b82f6":"#374151"}`,
+    borderRadius:10, background:activeTab===tab?"#3b82f620":"transparent",
+    color:activeTab===tab?"#3b82f6":"#9ca3af", cursor:"pointer",
+    fontFamily:"JetBrains Mono, monospace", fontWeight:700, fontSize:"0.82rem", transition:"all 0.2s"
+  });
+
+  const btnStyle = (active,color="#3b82f6") => ({
+    background:active?`linear-gradient(135deg,${color},#8b5cf6)`:"#374151",
+    border:"none", borderRadius:12, padding:"14px 24px",
+    color:active?"#fff":"#6b7280", cursor:active?"pointer":"not-allowed",
+    fontFamily:"JetBrains Mono, monospace", fontWeight:700, fontSize:"0.9rem",
+    display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+    transition:"all 0.2s", boxShadow:active?`0 4px 20px ${color}40`:"none", width:"100%"
+  });
+
+  const modelBtn = (m, selected, onSelect) => (
+    <button key={m.key} onClick={()=>onSelect(m)} style={{
+      background:selected?.key===m.key?m.color+"15":"#1f2937",
+      border:`2px solid ${selected?.key===m.key?m.color:"#374151"}`,
+      borderRadius:10, padding:"11px 14px", cursor:"pointer", textAlign:"left", transition:"all 0.2s", width:"100%"
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:"0.78rem",fontWeight:700,color:m.color,background:m.color+"20",padding:"2px 6px",borderRadius:4,flexShrink:0}}>{m.icon}</span>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontWeight:700,fontSize:"0.83rem",color:selected?.key===m.key?m.color:"#f1f5f9",fontFamily:"JetBrains Mono, monospace"}}>{m.name}</div>
+          <div style={{fontSize:"0.68rem",color:"#9ca3af"}}>{m.desc}</div>
+        </div>
+        {selected?.key===m.key&&<span style={{fontSize:"0.62rem",fontWeight:700,padding:"2px 7px",borderRadius:999,background:m.color+"30",color:m.color}}>OK</span>}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:20, alignItems:"start" }}>
-        <div className="card">
-          <p className="card__title" style={{ marginBottom:14 }}>
-            <span style={{ background:"#3b82f620", color:"#3b82f6", borderRadius:"50%", width:20, height:20, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"0.72rem", fontWeight:800, marginRight:8 }}>1</span>
-            Choisir le modele ML
-          </p>
-          <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-            {MODELS_INFO.map(model => <SelectCard key={model.key} item={model} selected={selectedModel} onClick={setSelectedModel} type="model" />)}
+      <div style={{marginTop:7,display:"flex",gap:12}}>
+        <span style={{fontSize:"0.68rem",color:"#9ca3af"}}>Acc: <strong style={{color:m.color}}>{m.acc}%</strong></span>
+        <span style={{fontSize:"0.68rem",color:"#9ca3af"}}>F1: <strong style={{color:m.color}}>{m.f1}%</strong></span>
+        <span style={{marginLeft:"auto",fontSize:"0.6rem",fontWeight:700,padding:"1px 6px",borderRadius:999,background:"rgba(34,197,94,0.15)",color:"#22c55e"}}>Actif</span>
+      </div>
+    </button>
+  );
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div>
+        <h2 style={{fontFamily:"JetBrains Mono, monospace",fontSize:"1rem",marginBottom:4}}>Systeme d Analyse Avance</h2>
+        <p style={{fontSize:"0.8rem",color:"#9ca3af"}}>3 modes : scenarios predefinies, fichier Excel en masse, ou saisie manuelle.</p>
+      </div>
+
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        <button style={tabStyle("scenarios")} onClick={()=>setActiveTab("scenarios")}>Scenarios Predefinies</button>
+        <button style={tabStyle("batch")}     onClick={()=>setActiveTab("batch")}>Upload Excel (Batch)</button>
+        <button style={tabStyle("manual")}    onClick={()=>setActiveTab("manual")}>Saisie Manuelle</button>
+      </div>
+
+      {activeTab==="scenarios" && (
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:20,alignItems:"start"}}>
+          <div className="card">
+            <p className="card__title" style={{marginBottom:14}}>
+              <span style={{background:"#3b82f620",color:"#3b82f6",borderRadius:"50%",width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:"0.7rem",fontWeight:800,marginRight:8}}>1</span>
+              Choisir le modele ML
+            </p>
+            <div style={{display:"flex",flexDirection:"column",gap:7}}>
+              {MODELS_INFO.map(m=>modelBtn(m,selectedModel,setSelectedModel))}
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div className="card">
+              <p className="card__title" style={{marginBottom:12}}>
+                <span style={{background:"#ef444420",color:"#ef4444",borderRadius:"50%",width:20,height:20,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:"0.7rem",fontWeight:800,marginRight:8}}>2</span>
+                Choisir le scenario
+              </p>
+              <div style={{fontSize:"0.7rem",color:"#9ca3af",padding:"6px 10px",background:"#1f2937",borderRadius:6,borderLeft:"3px solid #3b82f6",marginBottom:10}}>
+                Donnees reelles — dataset CTU-IoT-Malware-Capture
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {ATTACK_SCENARIOS.map(s=>(
+                  <button key={s.id} onClick={()=>setSelectedScenario(s)} style={{
+                    background:selectedScenario?.id===s.id?s.color+"15":"#1f2937",
+                    border:`2px solid ${selectedScenario?.id===s.id?s.color:"#374151"}`,
+                    borderRadius:9,padding:"10px 13px",cursor:"pointer",textAlign:"left",transition:"all 0.2s"
+                  }}>
+                    <div style={{display:"flex",alignItems:"center",gap:9}}>
+                      <span style={{fontSize:"0.72rem",fontWeight:700,color:s.color,background:s.color+"20",padding:"2px 6px",borderRadius:4,flexShrink:0}}>{s.icon}</span>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:"0.82rem",color:selectedScenario?.id===s.id?s.color:"#f1f5f9",fontFamily:"JetBrains Mono, monospace"}}>{s.label}</div>
+                        <div style={{fontSize:"0.68rem",color:"#9ca3af"}}>{s.desc}</div>
+                      </div>
+                      {selectedScenario?.id===s.id&&<span style={{marginLeft:"auto",fontSize:"0.62rem",fontWeight:700,padding:"2px 6px",borderRadius:999,background:s.color+"30",color:s.color,flexShrink:0}}>OK</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {selectedModel&&selectedScenario&&!resultScenario&&(
+              <div style={{background:"#111827",border:"1px solid #1f2937",borderRadius:10,padding:"12px 14px"}}>
+                <div style={{fontSize:"0.65rem",color:"#6b7280",textTransform:"uppercase",marginBottom:7}}>Recapitulatif</div>
+                <div style={{fontSize:"0.8rem",color:"#9ca3af",marginBottom:3}}>Modele : <strong style={{color:selectedModel.color}}>{selectedModel.name}</strong></div>
+                <div style={{fontSize:"0.8rem",color:"#9ca3af"}}>Scenario : <strong style={{color:selectedScenario.color}}>{selectedScenario.label}</strong></div>
+              </div>
+            )}
+            <button onClick={runScenario} disabled={!selectedModel||!selectedScenario||loadingScenario}
+              style={btnStyle(selectedModel&&selectedScenario&&!loadingScenario)}>
+              {loadingScenario?"Analyse en cours...":!selectedScenario?"Selectionnez un scenario":`Lancer — ${selectedModel?.name}`}
+            </button>
+            <ResultCard result={resultScenario} selectedModel={selectedModel} selectedScenario={selectedScenario}/>
           </div>
         </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+      )}
+
+      {activeTab==="batch" && (
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card">
-            <p className="card__title" style={{ marginBottom:14 }}>
-              <span style={{ background:"#ef444420", color:"#ef4444", borderRadius:"50%", width:20, height:20, display:"inline-flex", alignItems:"center", justifyContent:"center", fontSize:"0.72rem", fontWeight:800, marginRight:8 }}>2</span>
-              Choisir le scenario
-            </p>
-            <div style={{ marginBottom:10, padding:"8px 12px", background:"#1f2937", borderRadius:8, fontSize:"0.72rem", color:"#9ca3af", borderLeft:"3px solid #3b82f6" }}>
-              Scenarios extraits du dataset CTU-IoT-Malware-Capture
+            <p className="card__title" style={{marginBottom:14}}>Upload Fichier Excel — Analyse en Masse</p>
+            <div style={{fontSize:"0.75rem",color:"#9ca3af",padding:"10px 14px",background:"#1f2937",borderRadius:8,borderLeft:"3px solid #3b82f6",marginBottom:16}}>
+              Le fichier Excel doit contenir les 21 features comme colonnes. Chaque ligne sera analysee independamment.
             </div>
-            <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
-              {ATTACK_SCENARIOS.map(attack => <SelectCard key={attack.id} item={attack} selected={selectedAttack} onClick={setSelectedAttack} type="attack" />)}
+            <div onClick={()=>fileInputRef.current?.click()} style={{
+              border:"2px dashed #374151",borderRadius:12,padding:"32px 24px",textAlign:"center",cursor:"pointer",
+              transition:"all 0.2s",background:batchFile?"#22c55e08":"transparent"
+            }}
+              onDragOver={e=>e.preventDefault()}
+              onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)setBatchFile(f);}}>
+              <div style={{fontSize:"2rem",marginBottom:10,color:"#3b82f6",fontFamily:"JetBrains Mono, monospace",fontWeight:700}}>XLS</div>
+              <div style={{fontWeight:700,color:batchFile?"#22c55e":"#f1f5f9",fontFamily:"JetBrains Mono, monospace",marginBottom:4}}>
+                {batchFile?batchFile.name:"Cliquez ou glissez votre fichier Excel"}
+              </div>
+              <div style={{fontSize:"0.72rem",color:"#9ca3af"}}>
+                {batchFile?`Taille : ${(batchFile.size/1024).toFixed(1)} KB`:"Formats acceptes : .xlsx, .xls"}
+              </div>
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls" style={{display:"none"}}
+                onChange={e=>{if(e.target.files[0])setBatchFile(e.target.files[0]);}}/>
             </div>
+            <div style={{display:"flex",gap:10,marginTop:14}}>
+              <button onClick={runBatch} disabled={!batchFile||loadingBatch} style={btnStyle(batchFile&&!loadingBatch,"#22c55e")}>
+                {loadingBatch?"Analyse en cours...":"Analyser le fichier"}
+              </button>
+              {batchFile&&(
+                <button onClick={()=>{setBatchFile(null);setBatchResults(null);setBatchError(null);}}
+                  style={{...btnStyle(true,"#ef4444"),width:"auto",padding:"14px 18px"}}>
+                  Effacer
+                </button>
+              )}
+            </div>
+            {batchError&&(
+              <div style={{marginTop:12,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,padding:"12px 14px",fontSize:"0.8rem",color:"#ef4444"}}>
+                Erreur : {batchError}
+              </div>
+            )}
           </div>
-          {selectedModel && selectedAttack && !result && (
-            <div style={{ background:"#111827", border:"1px solid #1f2937", borderRadius:10, padding:"12px 16px" }}>
-              <div style={{ fontSize:"0.68rem", color:"#6b7280", textTransform:"uppercase", marginBottom:8 }}>Recapitulatif</div>
-              <div style={{ fontSize:"0.82rem", color:"#9ca3af", marginBottom:4 }}>Modele : <strong style={{ color:selectedModel.color }}>{selectedModel.name}</strong></div>
-              <div style={{ fontSize:"0.82rem", color:"#9ca3af" }}>Scenario : <strong style={{ color:selectedAttack.color }}>{selectedAttack.label}</strong></div>
+          {batchResults&&(
+            <div className="card">
+              <p className="card__title" style={{marginBottom:14}}>Resultats — {batchResults.total} connexions analysees</p>
+              <BatchResults data={batchResults}/>
             </div>
           )}
-          <button onClick={runAnalysis} disabled={!canAnalyze} style={{ background:canAnalyze?"linear-gradient(135deg, #3b82f6, #8b5cf6)":"#374151", border:"none", borderRadius:12, padding:"15px 24px", color:canAnalyze?"#fff":"#6b7280", cursor:canAnalyze?"pointer":"not-allowed", fontFamily:"JetBrains Mono, monospace", fontWeight:700, fontSize:"0.9rem", display:"flex", alignItems:"center", justifyContent:"center", gap:10, transition:"all 0.2s ease", boxShadow:canAnalyze?"0 4px 20px rgba(59,130,246,0.3)":"none" }}>
-            {loading ? <>Analyse en cours...</> : !selectedAttack ? "Selectionnez un scenario" : `Lancer l analyse — ${selectedModel?.name}`}
-          </button>
-          {error && <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.3)", borderRadius:10, padding:"12px 16px", fontSize:"0.82rem", color:"#ef4444" }}>Erreur : {error}</div>}
-          <ResultPanel result={result} selectedModel={selectedModel} selectedAttack={selectedAttack} />
         </div>
-      </div>
+      )}
+
+      {activeTab==="manual" && (
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          <div className="card">
+            <p className="card__title" style={{marginBottom:14}}>Saisie Manuelle des Features</p>
+            <div style={{fontSize:"0.72rem",color:"#9ca3af",padding:"8px 12px",background:"#1f2937",borderRadius:7,borderLeft:"3px solid #8b5cf6",marginBottom:16}}>
+              Remplissez les 21 features manuellement puis cliquez sur Analyser.
+            </div>
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:"0.7rem",color:"#9ca3af",textTransform:"uppercase",marginBottom:8,letterSpacing:"0.05em"}}>Modele ML</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {MODELS_INFO.map(m=>(
+                  <button key={m.key} onClick={()=>setManualModel(m)} style={{
+                    padding:"6px 14px",border:`2px solid ${manualModel?.key===m.key?m.color:"#374151"}`,
+                    borderRadius:8,background:manualModel?.key===m.key?m.color+"15":"transparent",
+                    color:manualModel?.key===m.key?m.color:"#9ca3af",cursor:"pointer",
+                    fontFamily:"JetBrains Mono, monospace",fontWeight:600,fontSize:"0.78rem",transition:"all 0.2s"
+                  }}>{m.name}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+              {MANUAL_FIELDS.map(field=>(
+                <div key={field.key}>
+                  <div style={{fontSize:"0.65rem",color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.04em",marginBottom:4}}>{field.label}</div>
+                  <input type="number" step="any" value={manualForm[field.key]}
+                    onChange={e=>setManualForm(prev=>({...prev,[field.key]:parseFloat(e.target.value)||0}))}
+                    style={{background:"#1f2937",border:"1px solid #374151",borderRadius:7,padding:"7px 10px",color:"#f1f5f9",width:"100%",fontSize:"0.82rem",fontFamily:"JetBrains Mono, monospace",outline:"none"}}/>
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={runManual} disabled={loadingManual} style={btnStyle(!loadingManual,"#8b5cf6")}>
+                {loadingManual?"Analyse en cours...":`Analyser — ${manualModel?.name}`}
+              </button>
+              <button onClick={()=>{setManualForm(initManual());setResultManual(null);}}
+                style={{...btnStyle(true,"#374151"),width:"auto",padding:"14px 18px",background:"#374151",boxShadow:"none"}}>
+                Reset
+              </button>
+            </div>
+            {manualError&&(
+              <div style={{marginTop:12,background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,padding:"12px 14px",fontSize:"0.8rem",color:"#ef4444"}}>
+                Erreur : {manualError}
+              </div>
+            )}
+          </div>
+          {resultManual&&(
+            <div className="card">
+              <p className="card__title" style={{marginBottom:12}}>Resultat de l Analyse</p>
+              <ResultCard result={resultManual} selectedModel={manualModel} selectedScenario={null}/>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

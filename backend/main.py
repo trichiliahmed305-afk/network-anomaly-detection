@@ -266,7 +266,17 @@ async def predire_batch(file: UploadFile = File(...)):
     try:
         # Lire le fichier Excel
         contents = await file.read()
-        df_input = pd.read_excel(io.BytesIO(contents))
+        # Détecter le type de fichier et lire en conséquence
+filename = file.filename.lower()
+if filename.endswith('.csv'):
+    df_input = pd.read_csv(io.BytesIO(contents))
+elif filename.endswith(('.xlsx', '.xls',"csv")):
+    df_input = pd.read_excel(io.BytesIO(contents))
+else:
+    raise HTTPException(
+        status_code=400,
+        detail="Format non supporte. Utilisez .csv, .xlsx ou .xls"
+    )
 
         # Vérifier les colonnes requises
         required_cols = feature_names
