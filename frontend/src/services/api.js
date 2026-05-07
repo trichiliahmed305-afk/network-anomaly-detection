@@ -1,8 +1,8 @@
-import axios from "axios";
+﻿import axios from "axios";
 
 const BASE_URL = "https://itgate-anomaly-api.onrender.com";
 
-const api = axios.create({ baseURL: BASE_URL, timeout: 10000 });
+const api = axios.create({ baseURL: BASE_URL, timeout: 30000 });
 
 export const apiService = {
   getStatus:      ()            => api.get("/status"),
@@ -11,6 +11,9 @@ export const apiService = {
   getAlerts:      (limit = 100) => api.get(`/alerts?limit=${limit}`),
   clearAlerts:    ()            => api.delete("/alerts"),
   predict:        (payload)     => api.post("/predict", payload),
+  predictBatch:   (formData)    => api.post("/predict/batch", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   downloadReport: ()            => api.get("/report", {
     responseType: "blob",
     headers: { Accept: "application/pdf" }

@@ -1,4 +1,7 @@
 # backend/main.py
+# Ajouter ces imports en haut du fichier
+from fastapi import File, UploadFile
+import io
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import TrafficData, PredictionResult
@@ -253,3 +256,82 @@ def generer_rapport():
 def vider_alertes():
     alert_history.clear()
     return {"message": "Historique des alertes vide", "timestamp": datetime.now().isoformat()}
+
+
+@app.post("/predict/batch", tags=["Prediction"])
+async def predire_batch(file: UploadFile = File(...)):
+    """Analyser un fichier Excel contenant plusieurs connexions"""
+    if not MODELS or scaler is None:
+        raise HTTPException(status_code=503, detail="Modeles non disponibles")
+    try:
+        # Lire le fichier Excel
+        contents = await file.read()
+        df_input = pd.read_excel(io.BytesIO(contents))
+
+        # Vérifier les colonnes requises
+        required_cols = feature_names
+        missing = [c for c in required_cols if c not in df_input.columns]
+        if missing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Colonnes manquantes: {missing}"
+            )
+
+        results = []
+        malicious_count = 0
+        benign_count    = 0
+
+        for idx, row in df_input.iterrows():
+            # Préparer les features
+            X = pd.DataFrame([row[feature_names]])
+            X[SCALER_COLS] = scaler.transform(X[SCALER_COLS])
+            X = X[feature_names]
+
+            # Prédire avec Random Forest par défaut
+            model = MODELS.get('random_forest')
+            prediction = int(model.predict(X)[0])
+            probas     = model.predict_proba(X)[0]
+            confidence = round(float(max(probas)) * 100, 2)
+            risk_level = determine_risk_level(confidence, prediction)
+            label      = "Malicious" if prediction == 1 else "Benign"
+
+            if prediction == 1:
+                malicious_count += 1
+            else:
+                benign_count += 1
+
+            results.append({
+                "index":      int(idx),
+                "prediction": prediction,
+                "label":      label,
+                "confidence": confidence,
+                "risk_level": risk_level,
+            })
+
+            # Sauvegarder dans l'historique
+            alert_history.append({
+                "timestamp":  datetime.now().isoformat(),
+                "prediction": prediction,
+                "label":      label,
+                "confidence": confidence,
+                "risk_level": risk_level,
+                "model":      "random_forest",
+                "data":       row[feature_names].to_dict()
+            })
+
+        total = len(results)
+        return {
+            "total":        total,
+            "malicious":    malicious_count,
+            "benign":       benign_count,
+            "taux_detection": round(malicious_count/total*100, 2) if total > 0 else 0,
+            "results":      results
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur analyse batch: {str(e)}"
+        )
