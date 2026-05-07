@@ -4,53 +4,12 @@ import { MODELS_INFO } from "../constants/theme";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const ATTACK_SCENARIOS = [
-  // ── ATTAQUES MALVEILLANTES ───────────────────────────────
-  {
-    id:"mirai_telnet", label:"Mirai — Scan Telnet", icon:"[SCAN]", color:"#ef4444",
-    desc:"Scan port 23 — signature botnet Mirai IoT",
-    payload:{id_orig_p:53854,id_resp_p:23,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:60,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:2.93e-9,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
-  },
-  {
-    id:"port_scan_9527", label:"Port Scan — Port 9527", icon:"[SCAN]", color:"#f97316",
-    desc:"Scan horizontal port non standard 9527",
-    payload:{id_orig_p:36495,id_resp_p:9527,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:60,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:2,minute:15,day_of_week:5,inter_arrival_time:3.67e-8,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
-  },
-  {
-    id:"port_scan_double", label:"Port Scan — Double Paquet", icon:"[SCAN]", color:"#dc2626",
-    desc:"Scan avec 2 paquets — tentative de connexion",
-    payload:{id_orig_p:56144,id_resp_p:9527,duration:0.998941,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:2,orig_ip_bytes:120,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:4,minute:30,day_of_week:6,inter_arrival_time:2.97e-9,pkt_ratio:0.1176,avg_orig_pkt_size:30,avg_resp_pkt_size:0}
-  },
-  {
-    id:"brute_force_ssh", label:"Brute Force — SSH", icon:"[BRF]", color:"#8b5cf6",
-    desc:"Tentatives repetees authentification SSH port 22",
-    payload:{id_orig_p:45678,id_resp_p:22,duration:0.5,orig_bytes:200,resp_bytes:50,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.06,resp_pkts:0,resp_ip_bytes:0,is_orig_local:0,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:2,minute:30,day_of_week:5,inter_arrival_time:0.05,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
-  },
-  {
-    id:"ddos_flood", label:"DDoS — Flood Massif", icon:"[DOS]", color:"#ec4899",
-    desc:"Flood UDP massif vers port 80",
-    payload:{id_orig_p:9999,id_resp_p:80,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:0,orig_h_count:991061,resp_h_count:1,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:0.0001,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
-  },
-  {
-    id:"botnet_c2", label:"Botnet — C2 Communication", icon:"[BOT]", color:"#f59e0b",
-    desc:"Communication Command and Control IRC port 6667",
-    payload:{id_orig_p:22222,id_resp_p:6667,duration:300,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:3,resp_h_count:1,is_well_known_port:0,hour:3,minute:30,day_of_week:6,inter_arrival_time:6,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}
-  },
-  // ── TRAFIC NORMAL ────────────────────────────────────────
-  {
-    id:"normal_udp", label:"Normal — UDP Port Aleatoire", icon:"[OK]", color:"#22c55e",
-    desc:"Connexion UDP legitime vers port non standard",
-    payload:{id_orig_p:43763,id_resp_p:41534,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
-  },
-  {
-    id:"normal_30672", label:"Normal — Connexion Standard", icon:"[OK]", color:"#06b6d4",
-    desc:"Trafic reseau legitime typique",
-    payload:{id_orig_p:43763,id_resp_p:30672,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:14,minute:20,day_of_week:1,inter_arrival_time:3.85e-6,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
-  },
-  {
-    id:"normal_web", label:"Normal — Navigation Web", icon:"[OK]", color:"#10b981",
-    desc:"Trafic HTTP normal depuis reseau interne",
-    payload:{id_orig_p:43763,id_resp_p:44078,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:10,minute:45,day_of_week:3,inter_arrival_time:1.14e-7,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}
-  },
+  { id:"mirai_telnet",  label:"Mirai Telnet Scan",    icon:"[MAL]", color:"#ef4444", desc:"Scan Telnet signature Mirai botnet",    payload:{id_orig_p:51524,id_resp_p:23,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:2.93e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
+  { id:"mirai_rapide",  label:"Mirai Scan Rapide",    icon:"[MAL]", color:"#f97316", desc:"Variante rapide du scan Mirai",          payload:{id_orig_p:56305,id_resp_p:23,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0201,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:2,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:3.67e-8,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}},
+  { id:"mirai_port23",  label:"Mirai Port 23 Massif", icon:"[MAL]", color:"#dc2626", desc:"Scan massif port 23 botnet IoT",         payload:{id_orig_p:60905,id_resp_p:23,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:2.97e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
+  { id:"normal_1",      label:"Trafic Normal",         icon:"[OK]",  color:"#22c55e", desc:"Connexion legitime port aleatoire",      payload:{id_orig_p:43763,id_resp_p:14336,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0134,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}},
+  { id:"normal_2",      label:"Trafic Normal DNS",     icon:"[OK]",  color:"#06b6d4", desc:"Connexion reseau normale",               payload:{id_orig_p:43763,id_resp_p:11764,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0134,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:3.85e-6,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}},
+  { id:"normal_3",      label:"Trafic Bidirectionnel", icon:"[OK]",  color:"#10b981", desc:"Echange bidirectionnel normal",          payload:{id_orig_p:34243,id_resp_p:49560,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:2.97e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
 ];
 
 const MANUAL_FIELDS = [
@@ -331,9 +290,9 @@ export default function PredictForm({onResult}) {
                 {batchFile?batchFile.name:"Cliquez ou glissez votre fichier Excel"}
               </div>
               <div style={{fontSize:"0.72rem",color:"#9ca3af"}}>
-                {batchFile?`Taille : ${(batchFile.size/1024).toFixed(1)} KB`:"Formats acceptes : .xlsx, .xls"}
+                {batchFile?`Taille : ${(batchFile.size/1024).toFixed(1)} KB`:"Formats acceptes : .xlsx, .xls, .csv"}
               </div>
-              <input ref={fileInputRef} type="file" accept=".xlsx,.xls" style={{display:"none"}}
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" style={{display:"none"}}
                 onChange={e=>{if(e.target.files[0])setBatchFile(e.target.files[0]);}}/>
             </div>
             <div style={{display:"flex",gap:10,marginTop:14}}>
