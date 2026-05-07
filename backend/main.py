@@ -70,7 +70,7 @@ rf_model  = MODELS.get('random_forest')
 iso_model = MODELS.get('isolation_forest')
 
 alert_history: List[dict] = []
-
+# Colonnes normalisees par le scaler
 SCALER_COLS = [
     'duration', 'orig_bytes', 'resp_bytes', 'orig_pkts',
     'resp_pkts', 'orig_ip_bytes', 'resp_ip_bytes',
@@ -92,7 +92,6 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
 def preparer_features(data: TrafficData) -> pd.DataFrame:
     features = {
         'id.orig_p':          data.id_orig_p,
-        'id.resp_p':          data.id_resp_p,
         'duration':           data.duration,
         'orig_bytes':         data.orig_bytes,
         'resp_bytes':         data.resp_bytes,
@@ -116,7 +115,6 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
     df = pd.DataFrame([features])
     df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
     return df[feature_names]
-
 @app.get("/", tags=["Status"])
 def racine():
     return {
