@@ -1,0 +1,55 @@
+// ============================================================
+// VARIABLES — ITGATE Design System
+// ============================================================
+
+// Colors
+$color-bg:          #0a0e1a;
+$color-card:        #111827;
+$color-card2:       #1f2937;
+$color-border:      #1f2937;
+$color-border2:     #374151;
+
+$color-accent:      #3b82f6;
+$color-accent2:     #60a5fa;
+$color-purple:      #8b5cf6;
+$color-yellow:      #f59e0b;
+
+$color-success:     #22c55e;
+$color-danger:      #ef4444;
+$color-warning:     #f59e0b;
+
+$color-text:        #f1f5f9;
+$color-text-muted:  #9ca3af;
+$color-text-sub:    #6b7280;
+
+// Typography
+$font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+$font-body:   'IBM Plex Sans', 'Segoe UI', sans-serif;
+
+// Spacing
+$space-xs:    4px;
+$space-sm:    8px;
+$space-md:    16px;
+$space-lg:    24px;
+$space-xl:    32px;
+$space-2xl:   48px;
+
+// Border radius
+$radius-sm:   6px;
+$radius-md:   10px;
+$radius-lg:   14px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+$shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+
+// Breakpoints
+$bp-mobile:   640px;
+$bp-tablet:   768px;
+$bp-desktop:  1024px;
+
+// Transitions
+$transition-fast:   all 0.15s ease;
+$transition-normal: all 0.25s ease;
+$transition-slow:   all 0.4s ease;

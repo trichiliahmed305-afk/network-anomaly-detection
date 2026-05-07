@@ -1,0 +1,88 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-sm;
+  padding: 7px $space-md;
+  border-radius: $radius-md;
+  font-family: $font-body;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: $transition-fast;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover   { transform: translateY(-1px); }
+  &:active  { transform: translateY(0); }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  // Variants
+  &--primary {
+    background: $color-accent;
+    color: #fff;
+    border-color: $color-accent;
+    &:hover { background: $color-accent2; }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $color-text-muted;
+    border-color: $color-border;
+    &:hover { color: $color-text; border-color: $color-border2; }
+  }
+
+  &--danger {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+    border-color: rgba($color-danger, 0.2);
+    &:hover { background: rgba($color-danger, 0.2); }
+  }
+
+  &--purple {
+    background: $color-purple;
+    color: #fff;
+    &:hover { opacity: 0.88; }
+  }
+
+  &--icon {
+    padding: 7px 10px;
+  }
+
+  @media (max-width: $bp-mobile) {
+    font-size: 0.78rem;
+    padding: 6px $space-sm;
+  }
+}
+
+// Nav tabs
+.nav-tab {
+  background: transparent;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: 8px $space-lg;
+  color: $color-text-muted;
+  font-family: $font-body;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: $transition-fast;
+  white-space: nowrap;
+
+  &:hover { border-color: $color-accent; color: $color-text; }
+
+  &.active {
+    background: $color-accent;
+    border-color: $color-accent;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: 6px $space-md;
+    font-size: 0.78rem;
+  }
+}

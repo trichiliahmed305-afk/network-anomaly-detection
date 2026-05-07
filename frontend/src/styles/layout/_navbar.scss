@@ -1,0 +1,15 @@
+.navbar {
+  padding: $space-md $space-xl;
+  display: flex;
+  gap: $space-sm;
+  border-bottom: 1px solid $color-border;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: $bp-mobile) {
+    padding: $space-sm $space-md;
+  }
+}

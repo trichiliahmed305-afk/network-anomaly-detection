@@ -1,0 +1,36 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &--malicious {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+  }
+
+  &--benign {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+  }
+
+  &--low      { background: rgba($color-success, 0.12); color: $color-success; }
+  &--medium   { background: rgba($color-yellow, 0.12);  color: $color-yellow; }
+  &--high     { background: rgba($color-warning, 0.12); color: $color-warning; }
+  &--critical { background: rgba($color-danger, 0.12);  color: $color-danger; }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  animation: pulse 2s ease infinite;
+
+  &--online  { background: $color-success; }
+  &--offline { background: $color-danger; }
+}

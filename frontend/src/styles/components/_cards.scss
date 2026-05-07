@@ -1,0 +1,138 @@
+// ---- Base Card ----
+.card {
+  background: $color-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-lg;
+  transition: $transition-normal;
+  animation: fadeIn 0.3s ease forwards;
+
+  &:hover {
+    border-color: rgba($color-accent, 0.3);
+    box-shadow: $shadow-glow;
+  }
+
+  &__title {
+    font-family: $font-mono;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: $space-md;
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    color: $color-text;
+  }
+}
+
+// ---- Stat Card ----
+.stat-card {
+  background: $color-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-md $space-lg;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  transition: $transition-normal;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-card;
+  }
+
+  &__icon {
+    border-radius: $radius-md;
+    padding: 10px;
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    color: $color-text-muted;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+}
+
+// ---- Model Card ----
+.model-card {
+  background: $color-card;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: $space-lg;
+  transition: $transition-normal;
+
+  &:hover {
+    border-color: var(--model-color);
+    box-shadow: 0 0 20px rgba(var(--model-color-rgb), 0.1);
+  }
+
+  &__icon  { font-size: 1.75rem; margin-bottom: $space-sm; }
+  &__name  { font-weight: 700; margin-bottom: $space-xs; }
+
+  &__badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px $space-sm;
+    border-radius: $radius-full;
+    margin-bottom: $space-md;
+    font-weight: 600;
+  }
+
+  &__metric {
+    margin-bottom: $space-sm;
+
+    &-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: $space-xs;
+      font-size: 0.78rem;
+    }
+
+    &-bar {
+      background: $color-card2;
+      border-radius: $radius-sm;
+      height: 6px;
+
+      &-fill {
+        height: 100%;
+        transition: width 1.2s ease;
+      }
+    }
+  }
+}
+
+// ---- Simulator (OUTSIDE) ----
+.simulator-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-md;
+
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.simulator-card {
+  background: $color-card2;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: $space-md;
+  transition: $transition-normal;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+}

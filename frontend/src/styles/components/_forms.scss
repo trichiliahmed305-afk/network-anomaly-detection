@@ -1,0 +1,46 @@
+.form {
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: $color-text-muted;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__input,
+  &__select {
+    background: $color-card2;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    padding: 7px 10px;
+    color: $color-text;
+    width: 100%;
+    font-size: 0.85rem;
+    font-family: $font-body;
+    transition: $transition-fast;
+    outline: none;
+
+    &:focus {
+      border-color: $color-accent;
+      box-shadow: 0 0 0 2px rgba($color-accent, 0.15);
+    }
+
+    option { background: $color-card2; }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-sm;
+
+    @media (max-width: $bp-mobile) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

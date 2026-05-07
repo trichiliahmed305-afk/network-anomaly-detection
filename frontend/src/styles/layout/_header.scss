@@ -1,0 +1,55 @@
+.header {
+  background: $color-card;
+  border-bottom: 1px solid $color-border;
+  padding: $space-md $space-xl;
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+
+  &__brand {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-family: $font-mono;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+  }
+
+  &__subtitle {
+    font-size: 0.75rem;
+    color: $color-text-muted;
+    margin-top: 2px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    flex-shrink: 0;
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    font-size: 0.78rem;
+    color: $color-text-muted;
+  }
+
+  @media (max-width: $bp-mobile) {
+    padding: $space-sm $space-md;
+
+    &__subtitle { display: none; }
+    &__title { font-size: 0.95rem; }
+  }
+}
