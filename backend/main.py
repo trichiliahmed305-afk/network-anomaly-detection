@@ -59,6 +59,8 @@ try:
             print(f"WARNING {key} non disponible: {e}")
 
     print(f"OK {len(MODELS)} modeles charges: {list(MODELS.keys())}")
+    print(f"Feature names: {feature_names}")
+    print(f"Scaler cols: {scaler.feature_names_in_ if hasattr(scaler, 'feature_names_in_') else 'N/A'}")
 
 except Exception as e:
     print(f"ERREUR chargement: {e}")
@@ -70,7 +72,7 @@ rf_model  = MODELS.get('random_forest')
 iso_model = MODELS.get('isolation_forest')
 
 alert_history: List[dict] = []
-# Colonnes normalisees par le scaler
+
 SCALER_COLS = [
     'duration', 'orig_bytes', 'resp_bytes', 'orig_pkts',
     'resp_pkts', 'orig_ip_bytes', 'resp_ip_bytes',
@@ -115,6 +117,32 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
     df = pd.DataFrame([features])
     df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
     return df[feature_names]
+
+def predire_une_ligne(row: pd.Series) -> dict:
+    """Prédit pour une seule ligne du DataFrame"""
+    # Convertir en float et remplacer NaN
+    X = pd.DataFrame([{col: float(row[col]) if pd.notna(row[col]) else 0.0
+                       for col in feature_names}])
+
+    # Normaliser uniquement les colonnes que le scaler connait
+    scaler_cols_available = [c for c in SCALER_COLS if c in X.columns]
+    if scaler_cols_available:
+        X[scaler_cols_available] = scaler.transform(X[scaler_cols_available])
+
+    model      = MODELS.get('random_forest')
+    prediction = int(model.predict(X[feature_names])[0])
+    probas     = model.predict_proba(X[feature_names])[0]
+    confidence = round(float(max(probas)) * 100, 2)
+    risk_level = determine_risk_level(confidence, prediction)
+    label      = "Malicious" if prediction == 1 else "Benign"
+
+    return {
+        "prediction": prediction,
+        "label":      label,
+        "confidence": confidence,
+        "risk_level": risk_level,
+    }
+
 @app.get("/", tags=["Status"])
 def racine():
     return {
@@ -122,6 +150,7 @@ def racine():
         "status": "operational",
         "modeles_charges": len(MODELS) > 0,
         "nb_modeles": len(MODELS),
+        "feature_names": feature_names,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -210,6 +239,10 @@ async def predire_batch(file: UploadFile = File(...)):
                 detail="Format non supporte. Utilisez .csv, .xlsx ou .xls"
             )
 
+        print(f"Batch recu: {len(df_input)} lignes, colonnes: {list(df_input.columns)}")
+        print(f"Feature names attendus: {feature_names}")
+
+        # Verifier les colonnes requises
         missing = [c for c in feature_names if c not in df_input.columns]
         if missing:
             raise HTTPException(
@@ -217,22 +250,22 @@ async def predire_batch(file: UploadFile = File(...)):
                 detail=f"Colonnes manquantes: {missing}"
             )
 
+        # Convertir toutes les colonnes en numerique
+        for col in feature_names:
+            df_input[col] = pd.to_numeric(df_input[col], errors='coerce').fillna(0.0)
+
         results         = []
         malicious_count = 0
         benign_count    = 0
+        errors          = 0
 
         for idx, row in df_input.iterrows():
             try:
-                X = pd.DataFrame([row[feature_names]])
-                X[SCALER_COLS] = scaler.transform(X[SCALER_COLS])
-                X = X[feature_names]
-
-                model      = MODELS.get('random_forest')
-                prediction = int(model.predict(X)[0])
-                probas     = model.predict_proba(X)[0]
-                confidence = round(float(max(probas)) * 100, 2)
-                risk_level = determine_risk_level(confidence, prediction)
-                label      = "Malicious" if prediction == 1 else "Benign"
+                res        = predire_une_ligne(row)
+                prediction = res["prediction"]
+                label      = res["label"]
+                confidence = res["confidence"]
+                risk_level = res["risk_level"]
 
                 if prediction == 1:
                     malicious_count += 1
@@ -257,10 +290,14 @@ async def predire_batch(file: UploadFile = File(...)):
                     "data":       row[feature_names].to_dict()
                 })
 
-            except Exception:
+            except Exception as ex:
+                print(f"Erreur ligne {idx}: {str(ex)}")
+                errors += 1
                 continue
 
         total = len(results)
+        print(f"Batch termine: {total} OK, {errors} erreurs")
+
         return {
             "total":          total,
             "malicious":      malicious_count,
