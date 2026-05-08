@@ -1,4 +1,4 @@
-# backend/main.py
+﻿# backend/main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import TrafficData, PredictionResult
@@ -14,7 +14,7 @@ from pdf_report import generer_rapport_pdf
 from fastapi.responses import Response
 
 app = FastAPI(
-    title="API Detection d'Anomalies Reseau — ITGATE PFE 2026",
+    title="API Detection d'Anomalies Reseau â€” ITGATE PFE 2026",
     description="Systeme ML de detection d'intrusions reseau en temps reel",
     version="1.0.0"
 )
@@ -94,7 +94,7 @@ def determine_risk_level(confidence: float, prediction: int) -> str:
 def preparer_features(data: TrafficData) -> pd.DataFrame:
     features = {
         'id.orig_p':          data.id_orig_p,
-        'id.resp_p':          data.id_resp_p,   # ← remettre
+           # â† remettre
         'duration':           data.duration,
         'orig_bytes':         data.orig_bytes,
         'resp_bytes':         data.resp_bytes,
@@ -123,7 +123,7 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
     return df[feature_names]
 
 def predire_une_ligne(row: pd.Series) -> dict:
-    """Prédit pour une seule ligne du DataFrame"""
+    """PrÃ©dit pour une seule ligne du DataFrame"""
     # Convertir en float et remplacer NaN
     X = pd.DataFrame([{col: float(row[col]) if pd.notna(row[col]) else 0.0
                        for col in feature_names}])
@@ -150,7 +150,7 @@ def predire_une_ligne(row: pd.Series) -> dict:
 @app.get("/", tags=["Status"])
 def racine():
     return {
-        "message": "API Detection Anomalies Reseau — ITGATE PFE 2026",
+        "message": "API Detection Anomalies Reseau â€” ITGATE PFE 2026",
         "status": "operational",
         "modeles_charges": len(MODELS) > 0,
         "nb_modeles": len(MODELS),
