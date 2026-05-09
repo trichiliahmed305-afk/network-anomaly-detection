@@ -111,12 +111,12 @@ class RapportAnomalies(FPDF):
         """Dark top banner with system title and subtitle."""
         self.set_fill_color(*_safe_rgb(13, 27, 42))
         self.rect(0, 0, 210, 18, "F")
-        self.set_font("Helvetica", "B", 13)
+        self.set_font("Arial", "B", 13)
         self.set_text_color(255, 255, 255)
         self.set_xy(0, 3)
         self.cell(0, 10, _sanitize("ITGATE - Network Anomaly Detection System"), align="C")
         self.set_text_color(100, 160, 220)
-        self.set_font("Helvetica", "", 7)
+        self.set_font("Arial", "", 7)
         self.set_xy(0, 11)
         self.cell(0, 5, _sanitize("PFE 2026 - Cybersecurity R&D - Sousse, Tunisie"), align="C")
         self.set_text_color(0, 0, 0)
@@ -127,7 +127,7 @@ class RapportAnomalies(FPDF):
         self.set_y(-12)
         self.set_fill_color(*_safe_rgb(13, 27, 42))
         self.rect(0, self.get_y(), 210, 15, "F")
-        self.set_font("Helvetica", "I", 7)
+        self.set_font("Arial", "I", 7)
         self.set_text_color(150, 180, 210)
         self.cell(
             0, 8,
@@ -148,7 +148,7 @@ class RapportAnomalies(FPDF):
         self.ln(4)
         self.set_fill_color(r, g, b)
         self.set_text_color(255, 255, 255)
-        self.set_font("Helvetica", "B", 10)
+        self.set_font("Arial", "B", 10)
         self.cell(8, 8, num, fill=True, border=0)
         self.set_fill_color(*_safe_rgb(r + 30, g + 30, b + 30))
         self.cell(0, 8, f"  {titre}", fill=True, border=0, new_x="LMARGIN", new_y="NEXT")
@@ -157,10 +157,10 @@ class RapportAnomalies(FPDF):
 
     def info_row(self, label: str, valeur: str) -> None:
         """Key-value row: bold label left, normal value right."""
-        self.set_font("Helvetica", "B", 9)
+        self.set_font("Arial", "B", 9)
         self.set_text_color(60, 60, 60)
         self.cell(65, 7, f"{label} :", new_x="RIGHT", new_y="LAST")
-        self.set_font("Helvetica", "", 9)
+        self.set_font("Arial", "", 9)
         self.set_text_color(30, 30, 30)
         self.multi_cell(0, 7, _sanitize(str(valeur)), new_x="LMARGIN", new_y="NEXT")
 
@@ -178,11 +178,11 @@ class RapportAnomalies(FPDF):
         self.set_xy(x, y)
         self.set_fill_color(r, g, b)
         self.set_text_color(255, 255, 255)
-        self.set_font("Helvetica", "B", 14)
+        self.set_font("Arial", "B", 14)
         self.cell(w, 10, valeur, fill=True, align="C", new_x="RIGHT", new_y="LAST")
         self.set_xy(x, y + 10)
         self.set_fill_color(*_safe_rgb(r - 20, g - 20, b - 20))
-        self.set_font("Helvetica", "", 7)
+        self.set_font("Arial", "", 7)
         self.cell(w, 7, label, fill=True, align="C", new_x="RIGHT", new_y="LAST")
         self.set_text_color(0, 0, 0)
 
@@ -266,11 +266,11 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         count = stats["niveaux"].get(level, 0)
         pct   = round(count / total * 100, 1) if total > 0 else 0.0
 
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font("Arial", "B", 9)
         pdf.set_text_color(*_safe_rgb(*rgb))
         pdf.cell(30, 7, label_fr, new_x="RIGHT", new_y="LAST")
         pdf.set_text_color(60, 60, 60)
-        pdf.set_font("Helvetica", "", 9)
+        pdf.set_font("Arial", "", 9)
         pdf.cell(22, 7, f"{count} alerte(s)", new_x="RIGHT", new_y="LAST")
 
         bar_x = pdf.get_x() + 2
@@ -282,7 +282,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     # 4. Models used table
     if stats["models_used"]:
         pdf.section_title("4", "MODELES ML UTILISES", (60, 100, 60))
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font("Arial", "B", 9)
         pdf.set_fill_color(210, 225, 255)
         pdf.cell(75, 7, "Modele",       fill=True, border=1)
         pdf.cell(30, 7, "Utilisations", fill=True, border=1, align="C")
@@ -293,7 +293,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             pct_m   = round(count / total * 100, 1) if total > 0 else 0.0
             fill_bg = (245, 248, 255) if i % 2 == 0 else (255, 255, 255)
             pdf.set_fill_color(*fill_bg)
-            pdf.set_font("Helvetica", "", 9)
+            pdf.set_font("Arial", "", 9)
             display = MODEL_DISPLAY.get(model_key, model_key.replace("_", " ").title())
             pdf.cell(75, 7, _sanitize(display),     fill=True, border=1)
             pdf.cell(30, 7, str(count),  fill=True, border=1, align="C")
@@ -316,7 +316,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         ("Modele",         34),
         ("Message",        44),
     ]
-    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_font("Arial", "B", 8)
     pdf.set_fill_color(*_safe_rgb(20, 50, 100))
     pdf.set_text_color(255, 255, 255)
     for label, w in cols:
@@ -344,7 +344,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
 
             fill_bg = (245, 248, 252) if i % 2 == 0 else (255, 255, 255)
             pdf.set_fill_color(*fill_bg)
-            pdf.set_font("Helvetica", "", 7)
+            pdf.set_font("Arial", "", 7)
 
             # Timestamp
             pdf.set_text_color(60, 60, 60)
@@ -407,10 +407,10 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
 
     for i, rec in enumerate(recommendations, 1):
         pdf.set_fill_color(255, 248, 220)
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font("Arial", "B", 9)
         pdf.set_text_color(150, 80, 0)
         pdf.cell(8, 8, str(i), fill=True, border=1, align="C")
-        pdf.set_font("Helvetica", "", 9)
+        pdf.set_font("Arial", "", 9)
         pdf.set_text_color(50, 50, 50)
         pdf.multi_cell(0, 8, _sanitize(f" {rec}"), fill=True, border=1)
         pdf.ln(1)
@@ -429,7 +429,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf.info_row("Stockage alertes",   "In-memory (max 1000 - FIFO) - perdu au redemarrage Render")
 
     pdf.ln(8)
-    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_font("Arial", "I", 8)
     pdf.set_text_color(120, 120, 120)
     pdf.cell(
         0, 6,
@@ -439,3 +439,4 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     )
 
     return bytes(pdf.output())
+
