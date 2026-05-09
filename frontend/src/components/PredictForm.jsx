@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { apiService } from "../services/api";
 import { MODELS_INFO } from "../constants/theme";
 import { useIsMobile } from "../hooks/useIsMobile";
