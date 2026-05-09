@@ -9,7 +9,7 @@ from fpdf import FPDF
 from datetime import datetime
 from typing import List, Dict, Tuple
 
-# â--â-- Constants â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+# â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 MAX_ALERTS_IN_TABLE = 50
 FEATURES_USED       = 20      # id.resp_p excluded (port bias)
 DATASET_NAME        = "CTU-IoT-Malware-Capture (Stratosphere Lab, CTU Prague)"
@@ -33,7 +33,7 @@ MODEL_DISPLAY: Dict[str, str] = {
 }
 
 
-# â--â-- Utility functions â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+# â”€â”€ Utility functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 def _sanitize(s) -> str:
@@ -99,7 +99,7 @@ def _compute_stats(alert_history: List[dict]) -> Dict:
     }
 
 
-# â--â-- PDF Class â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+# â”€â”€ PDF Class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RapportAnomalies(FPDF):
     """
@@ -159,7 +159,7 @@ class RapportAnomalies(FPDF):
         """Key-value row: bold label left, normal value right."""
         self.set_font("Helvetica", "B", 9)
         self.set_text_color(60, 60, 60)
-        self.cell(65, 7, _sanitize(f"{label} :"), new_x="RIGHT", new_y="LAST")
+        self.cell(65, 7, f"{label} :", new_x="RIGHT", new_y="LAST")
         self.set_font("Helvetica", "", 9)
         self.set_text_color(30, 30, 30)
         self.multi_cell(0, 7, _sanitize(str(valeur)), new_x="LMARGIN", new_y="NEXT")
@@ -204,7 +204,7 @@ class RapportAnomalies(FPDF):
             self.rect(x, y, fill_w, height, "F")
 
 
-# â--â-- Public API â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+# â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     """
@@ -231,7 +231,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf = RapportAnomalies()
     pdf.set_auto_page_break(auto=True, margin=16)
 
-    # â--â-- PAGE 1 - Executive summary â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+    # â”€â”€ PAGE 1 - Executive summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     pdf.add_page()
 
     # 1. Report metadata
@@ -300,7 +300,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             pdf.cell(0,  7, f"{pct_m}%", fill=True, border=1, align="C",
                      new_x="LMARGIN", new_y="NEXT")
 
-    # â--â-- PAGE 2 - Alert journal â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--â--
+    # â”€â”€ PAGE 2 - Alert journal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     pdf.add_page()
     pdf.section_title(
         "5",
@@ -335,7 +335,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     for i, alerte in enumerate(alertes):
         try:
             ts          = _format_timestamp(alerte.get("timestamp", ""))
-            label_txt   = str(alerte.get("label", "-"))
+            label_txt   = str(alerte.get("label", "?"))
             confidence  = alerte.get("confidence", 0)
             risk        = alerte.get("risk_level", "LOW")
             model_key   = alerte.get("model", "random_forest")
@@ -359,7 +359,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             pdf.cell(22, 6, f"{confidence}%", fill=True, border=1, align="C")
 
             # Risk (color-coded)
-            rgb_risk = RISK_CONFIG.get(risk, ("-", (100, 100, 100)))[1]
+            rgb_risk = RISK_CONFIG.get(risk, ("?", (100, 100, 100)))[1]
             pdf.set_text_color(*_safe_rgb(*rgb_risk))
             pdf.cell(24, 6, _sanitize(risk), fill=True, border=1, align="C")
 
@@ -374,7 +374,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         except (KeyError, TypeError):
             continue  # Skip malformed entries gracefully
 
-    # â--â-- PAGE 3 - Recommendations + technical info â--â--â--â--â--â--â--â--â--â--â--â--
+    # â”€â”€ PAGE 3 - Recommendations + technical info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     pdf.add_page()
     pdf.section_title("6", "RECOMMANDATIONS DE SECURITE", (150, 80, 20))
 
@@ -439,4 +439,3 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     )
 
     return bytes(pdf.output())
-
