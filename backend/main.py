@@ -145,7 +145,7 @@ def predire(data: TrafficData):
     if not MODELS or scaler is None:
         raise HTTPException(status_code=503, detail="Modeles non disponibles")
     try:
-        model_key = (data.model if data.model else 'random_forest')
+        model_key = getattr(data, 'model', 'random_forest') or 'random_forest'
         if model_key not in MODELS:
             model_key = 'random_forest'
         model = MODELS[model_key]
