@@ -1,4 +1,4 @@
-﻿# backend/main.py
+# backend/main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import TrafficData, PredictionResult
@@ -14,7 +14,7 @@ from pdf_report import generer_rapport_pdf
 from fastapi.responses import Response
 
 app = FastAPI(
-    title="API Detection d'Anomalies Reseau - ITGATE PFE 2026",
+    title="API Detection d'Anomalies Reseau — ITGATE PFE 2026",
     description="Systeme ML de detection d'intrusions reseau en temps reel",
     version="1.0.0"
 )
@@ -121,7 +121,7 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
 @app.get("/", tags=["Status"])
 def racine():
     return {
-        "message": "API Detection Anomalies Reseau - ITGATE PFE 2026",
+        "message": "API Detection Anomalies Reseau — ITGATE PFE 2026",
         "status": "operational",
         "modeles_charges": len(MODELS) > 0,
         "nb_modeles": len(MODELS),
@@ -196,7 +196,7 @@ def predire(data: TrafficData):
         raise HTTPException(status_code=500, detail=f"Erreur de prediction: {str(e)}")
 
 @app.post("/predict/batch", tags=["Prediction"])
-async def predire_batch(file: UploadFile = File(...)):
+async def predire_batch(file: UploadFile = File(...), model: str = "random_forest"):
     """Analyser un fichier CSV ou Excel - normalisation automatique si necessaire."""
     if not MODELS or scaler is None:
         raise HTTPException(status_code=503, detail="Modeles non disponibles")
@@ -237,7 +237,7 @@ async def predire_batch(file: UploadFile = File(...)):
         )
 
         if not already_normalized:
-            print("Donnees brutes detectees - normalisation automatique...")
+            print("Donnees brutes detectees — normalisation automatique...")
             df_input[SCALER_COLS] = scaler.transform(df_input[SCALER_COLS])
         else:
             print("Donnees deja normalisees")
@@ -250,9 +250,10 @@ async def predire_batch(file: UploadFile = File(...)):
         for idx, row in df_input.iterrows():
             try:
                 X          = pd.DataFrame([row[feature_names]])
-                model      = MODELS.get('random_forest')
-                prediction = int(model.predict(X)[0])
-                probas     = model.predict_proba(X)[0]
+                batch_model_key = model if model in MODELS else 'random_forest'
+                batch_model     = MODELS.get(batch_model_key)
+                prediction = int(batch_model.predict(X)[0])
+                probas     = batch_model.predict_proba(X)[0]
                 confidence = round(float(max(probas)) * 100, 2)
                 risk_level = determine_risk_level(confidence, prediction)
                 label      = "Malicious" if prediction == 1 else "Benign"
@@ -276,7 +277,7 @@ async def predire_batch(file: UploadFile = File(...)):
                     "label":      label,
                     "confidence": confidence,
                     "risk_level": risk_level,
-                    "model":      "random_forest",
+                    "model":      batch_model_key,
                     "data":       row[feature_names].to_dict()
                 })
 
@@ -349,13 +350,3 @@ def generer_rapport():
 def vider_alertes():
     alert_history.clear()
     return {"message": "Historique des alertes vide", "timestamp": datetime.now().isoformat()}
-
-@app.get("/debug/pdf_chars", tags=["Debug"])
-def debug_pdf_chars():
-    """Temporary endpoint to check pdf_report.py encoding."""
-    import os
-    path = os.path.join(os.path.dirname(__file__), "pdf_report.py")
-    with open(path, "rb") as f:
-        content = f.read()
-    bad = [(i, hex(b)) for i, b in enumerate(content) if b > 127]
-    return {"bad_chars": len(bad), "first_5": bad[:5], "file_size": len(content)}

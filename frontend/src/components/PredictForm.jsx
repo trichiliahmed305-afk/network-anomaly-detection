@@ -166,6 +166,7 @@ export default function PredictForm({onResult}) {
   const [loadingScenario,  setLoadingScenario]  = useState(false);
   const [resultScenario,   setResultScenario]   = useState(null);
   const [batchFile,        setBatchFile]        = useState(null);
+  const [selectedBatchModel, setSelectedBatchModel] = useState(MODELS_INFO[3]);
   const [loadingBatch,     setLoadingBatch]     = useState(false);
   const [batchResults,     setBatchResults]     = useState(null);
   const [batchError,       setBatchError]       = useState(null);
@@ -193,7 +194,7 @@ export default function PredictForm({onResult}) {
     try {
       const formData = new FormData();
       formData.append("file", batchFile);
-      const {data} = await apiService.predictBatch(formData);
+      const {data} = await apiService.predictBatch(formData, selectedBatchModel?.key || "random_forest");
       setBatchResults(data); onResult?.();
     } catch(e){ setBatchError(e.response?.data?.detail||e.message); }
     setLoadingBatch(false);
@@ -319,7 +320,20 @@ export default function PredictForm({onResult}) {
           <div className="card">
             <p className="card__title" style={{marginBottom:14}}>Upload Fichier Excel — Analyse en Masse</p>
             <div style={{fontSize:"0.75rem",color:"#9ca3af",padding:"10px 14px",background:"#1f2937",borderRadius:8,borderLeft:"3px solid #3b82f6",marginBottom:16}}>
-              Le fichier Excel doit contenir les 21 features comme colonnes. Chaque ligne sera analysee independamment.
+              Le fichier Excel doit contenir les 20 features comme colonnes. Chaque ligne sera analysee independamment.
+            </div>
+            <div style={{marginBottom:14}}>
+              <div style={{fontSize:"0.7rem",color:"#9ca3af",textTransform:"uppercase",marginBottom:8,letterSpacing:"0.05em"}}>Modele ML pour l analyse</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {MODELS_INFO.map(m=>(
+                  <button key={m.key} onClick={()=>setSelectedBatchModel(m)} style={{
+                    padding:"6px 14px",border:`2px solid ${selectedBatchModel?.key===m.key?m.color:"#374151"}`,
+                    borderRadius:8,background:selectedBatchModel?.key===m.key?m.color+"15":"transparent",
+                    color:selectedBatchModel?.key===m.key?m.color:"#9ca3af",cursor:"pointer",
+                    fontFamily:"JetBrains Mono, monospace",fontWeight:600,fontSize:"0.78rem",transition:"all 0.2s"
+                  }}>{m.name}</button>
+                ))}
+              </div>
             </div>
             <div onClick={()=>fileInputRef.current?.click()} style={{
               border:"2px dashed #374151",borderRadius:12,padding:"32px 24px",textAlign:"center",cursor:"pointer",
