@@ -236,8 +236,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
 
     # 1. Report metadata
     pdf.section_title("1", "INFORMATIONS DU RAPPORT", (20, 60, 120))
-    pdf.info_row("Date de generation", # sanitized below
-    #  now.strftime("%d/%m/%Y a %H:%M:%S"))
+    pdf.info_row("Date de generation", now.strftime("%d/%m/%Y a %H:%M:%S"))
     pdf.info_row("Systeme",             SYSTEM_VERSION)
     pdf.info_row("Dataset",             DATASET_NAME)
     pdf.info_row("Features du modele",  f"{FEATURES_USED} features (id.resp_p exclu - biais port 23)")
