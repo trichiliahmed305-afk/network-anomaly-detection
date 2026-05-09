@@ -14,7 +14,7 @@ from pdf_report import generer_rapport_pdf
 from fastapi.responses import Response
 
 app = FastAPI(
-    title="API Detection d'Anomalies Reseau — ITGATE PFE 2026",
+    title="API Detection d'Anomalies Reseau - ITGATE PFE 2026",
     description="Systeme ML de detection d'intrusions reseau en temps reel",
     version="1.0.0"
 )
@@ -121,7 +121,7 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
 @app.get("/", tags=["Status"])
 def racine():
     return {
-        "message": "API Detection Anomalies Reseau — ITGATE PFE 2026",
+        "message": "API Detection Anomalies Reseau - ITGATE PFE 2026",
         "status": "operational",
         "modeles_charges": len(MODELS) > 0,
         "nb_modeles": len(MODELS),
@@ -237,7 +237,7 @@ async def predire_batch(file: UploadFile = File(...)):
         )
 
         if not already_normalized:
-            print("Donnees brutes detectees — normalisation automatique...")
+            print("Donnees brutes detectees - normalisation automatique...")
             df_input[SCALER_COLS] = scaler.transform(df_input[SCALER_COLS])
         else:
             print("Donnees deja normalisees")

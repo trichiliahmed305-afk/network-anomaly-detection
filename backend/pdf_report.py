@@ -433,3 +433,4 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     )
 
     return bytes(pdf.output())
+
