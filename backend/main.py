@@ -116,10 +116,10 @@ def preparer_features(data: TrafficData) -> pd.DataFrame:
         'avg_resp_pkt_size':  data.avg_resp_pkt_size,
     }
     df = pd.DataFrame([features])
-    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
+    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS].values.reshape(1, -1))
     return df[feature_names]
     df = pd.DataFrame([features])
-    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS])
+    df[SCALER_COLS] = scaler.transform(df[SCALER_COLS].values.reshape(1, -1))
     return df[feature_names]
 
 def predire_une_ligne(row: pd.Series) -> dict:
