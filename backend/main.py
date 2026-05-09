@@ -349,3 +349,13 @@ def generer_rapport():
 def vider_alertes():
     alert_history.clear()
     return {"message": "Historique des alertes vide", "timestamp": datetime.now().isoformat()}
+
+@app.get("/debug/pdf_chars", tags=["Debug"])
+def debug_pdf_chars():
+    """Temporary endpoint to check pdf_report.py encoding."""
+    import os
+    path = os.path.join(os.path.dirname(__file__), "pdf_report.py")
+    with open(path, "rb") as f:
+        content = f.read()
+    bad = [(i, hex(b)) for i, b in enumerate(content) if b > 127]
+    return {"bad_chars": len(bad), "first_5": bad[:5], "file_size": len(content)}
