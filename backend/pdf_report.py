@@ -9,7 +9,7 @@ from fpdf import FPDF
 from datetime import datetime
 from typing import List, Dict, Tuple
 
-# ── Constants ────────────────────────────────────────────────
+# -- Constants ------------------------------------------------
 MAX_ALERTS_IN_TABLE = 50
 FEATURES_USED       = 20      # id.resp_p excluded (port bias)
 DATASET_NAME        = "CTU-IoT-Malware-Capture (Stratosphere Lab, CTU Prague)"
@@ -33,7 +33,7 @@ MODEL_DISPLAY: Dict[str, str] = {
 }
 
 
-# ── Utility functions ────────────────────────────────────────
+# -- Utility functions ----------------------------------------
 
 
 def _sanitize(s) -> str:
@@ -99,7 +99,7 @@ def _compute_stats(alert_history: List[dict]) -> Dict:
     }
 
 
-# ── PDF Class ────────────────────────────────────────────────
+# -- PDF Class ------------------------------------------------
 
 class RapportAnomalies(FPDF):
     """
@@ -204,7 +204,7 @@ class RapportAnomalies(FPDF):
             self.rect(x, y, fill_w, height, "F")
 
 
-# ── Public API ───────────────────────────────────────────────
+# -- Public API -----------------------------------------------
 
 def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     """
@@ -231,7 +231,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf = RapportAnomalies()
     pdf.set_auto_page_break(auto=True, margin=16)
 
-    # ── PAGE 1 - Executive summary ───────────────────────────
+    # -- PAGE 1 - Executive summary ---------------------------
     pdf.add_page()
 
     # 1. Report metadata
@@ -300,7 +300,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             pdf.cell(0,  7, f"{pct_m}%", fill=True, border=1, align="C",
                      new_x="LMARGIN", new_y="NEXT")
 
-    # ── PAGE 2 - Alert journal ───────────────────────────────
+    # -- PAGE 2 - Alert journal -------------------------------
     pdf.add_page()
     pdf.section_title(
         "5",
@@ -374,7 +374,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         except (KeyError, TypeError):
             continue  # Skip malformed entries gracefully
 
-    # ── PAGE 3 - Recommendations + technical info ────────────
+    # -- PAGE 3 - Recommendations + technical info ------------
     pdf.add_page()
     pdf.section_title("6", "RECOMMANDATIONS DE SECURITE", (150, 80, 20))
 
