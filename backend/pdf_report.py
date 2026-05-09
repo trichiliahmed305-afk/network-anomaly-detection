@@ -1,6 +1,6 @@
-﻿# backend/pdf_report.py
+# backend/pdf_report.py
 # ============================================================
-# ITGATE PFE 2026 â€” PDF Report Generator
+# ITGATE PFE 2026 - PDF Report Generator
 # Generates a professional 3-page anomaly detection report.
 # Dependencies: fpdf2 >= 2.7
 # ============================================================
@@ -9,7 +9,7 @@ from fpdf import FPDF
 from datetime import datetime
 from typing import List, Dict, Tuple
 
-# â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Constants ────────────────────────────────────────────────
 MAX_ALERTS_IN_TABLE = 50
 FEATURES_USED       = 20      # id.resp_p excluded (port bias)
 DATASET_NAME        = "CTU-IoT-Malware-Capture (Stratosphere Lab, CTU Prague)"
@@ -33,7 +33,12 @@ MODEL_DISPLAY: Dict[str, str] = {
 }
 
 
-# â”€â”€ Utility functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Utility functions ────────────────────────────────────────
+
+
+def _sanitize(s) -> str:
+    """Strip non-latin1 characters unsupported by Helvetica PDF font."""
+    return str(s).encode("latin-1", errors="replace").decode("latin-1")
 
 def _safe_rgb(r: int, g: int, b: int) -> Tuple[int, int, int]:
     """Clamp RGB values to [0, 255] to prevent fpdf color errors."""
@@ -94,7 +99,7 @@ def _compute_stats(alert_history: List[dict]) -> Dict:
     }
 
 
-# â”€â”€ PDF Class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── PDF Class ────────────────────────────────────────────────
 
 class RapportAnomalies(FPDF):
     """
@@ -109,11 +114,11 @@ class RapportAnomalies(FPDF):
         self.set_font("Helvetica", "B", 13)
         self.set_text_color(255, 255, 255)
         self.set_xy(0, 3)
-        self.cell(0, 10, "ITGATE â€” Network Anomaly Detection System", align="C")
+        self.cell(0, 10, _sanitize("ITGATE - Network Anomaly Detection System"), align="C")
         self.set_text_color(100, 160, 220)
         self.set_font("Helvetica", "", 7)
         self.set_xy(0, 11)
-        self.cell(0, 5, "PFE 2026 â€” Cybersecurity R&D â€” Sousse, Tunisie", align="C")
+        self.cell(0, 5, _sanitize("PFE 2026 - Cybersecurity R&D - Sousse, Tunisie"), align="C")
         self.set_text_color(0, 0, 0)
         self.ln(12)
 
@@ -126,7 +131,7 @@ class RapportAnomalies(FPDF):
         self.set_text_color(150, 180, 210)
         self.cell(
             0, 8,
-            f"ITGATE PFE 2026 â€” Page {self.page_no()} â€” Confidentiel â€” "
+            f"ITGATE PFE 2026 - Page {self.page_no()} - Confidentiel - "
             f"Genere le {datetime.now().strftime('%d/%m/%Y a %H:%M')}",
             align="C",
         )
@@ -157,7 +162,7 @@ class RapportAnomalies(FPDF):
         self.cell(65, 7, f"{label} :", new_x="RIGHT", new_y="LAST")
         self.set_font("Helvetica", "", 9)
         self.set_text_color(30, 30, 30)
-        self.multi_cell(0, 7, str(valeur), new_x="LMARGIN", new_y="NEXT")
+        self.multi_cell(0, 7, _sanitize(str(valeur)), new_x="LMARGIN", new_y="NEXT")
 
     def kpi_box(
         self,
@@ -199,7 +204,7 @@ class RapportAnomalies(FPDF):
             self.rect(x, y, fill_w, height, "F")
 
 
-# â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Public API ───────────────────────────────────────────────
 
 def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     """
@@ -217,7 +222,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         ValueError: if alert_history is empty.
     """
     if not alert_history:
-        raise ValueError("alert_history is empty â€” cannot generate report.")
+        raise ValueError("alert_history is empty - cannot generate report.")
 
     stats = _compute_stats(alert_history)
     now   = datetime.now()
@@ -226,15 +231,16 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf = RapportAnomalies()
     pdf.set_auto_page_break(auto=True, margin=16)
 
-    # â”€â”€ PAGE 1 â€” Executive summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── PAGE 1 - Executive summary ───────────────────────────
     pdf.add_page()
 
     # 1. Report metadata
     pdf.section_title("1", "INFORMATIONS DU RAPPORT", (20, 60, 120))
-    pdf.info_row("Date de generation",  now.strftime("%d/%m/%Y a %H:%M:%S"))
+    pdf.info_row("Date de generation", # sanitized below
+    #  now.strftime("%d/%m/%Y a %H:%M:%S"))
     pdf.info_row("Systeme",             SYSTEM_VERSION)
     pdf.info_row("Dataset",             DATASET_NAME)
-    pdf.info_row("Features du modele",  f"{FEATURES_USED} features (id.resp_p exclu â€” biais port 23)")
+    pdf.info_row("Features du modele",  f"{FEATURES_USED} features (id.resp_p exclu - biais port 23)")
     pdf.info_row("Framework ML",        SKLEARN_VERSION)
     pdf.info_row("Modeles disponibles", ", ".join(MODEL_DISPLAY.values()))
     pdf.info_row("Periode analysee",    _get_period(alert_history))
@@ -289,12 +295,12 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             pdf.set_fill_color(*fill_bg)
             pdf.set_font("Helvetica", "", 9)
             display = MODEL_DISPLAY.get(model_key, model_key.replace("_", " ").title())
-            pdf.cell(75, 7, display,     fill=True, border=1)
+            pdf.cell(75, 7, _sanitize(display),     fill=True, border=1)
             pdf.cell(30, 7, str(count),  fill=True, border=1, align="C")
             pdf.cell(0,  7, f"{pct_m}%", fill=True, border=1, align="C",
                      new_x="LMARGIN", new_y="NEXT")
 
-    # â”€â”€ PAGE 2 â€” Alert journal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── PAGE 2 - Alert journal ───────────────────────────────
     pdf.add_page()
     pdf.section_title(
         "5",
@@ -319,7 +325,7 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     pdf.set_text_color(0, 0, 0)
 
     risk_messages = {
-        "CRITICAL": "Critique â€” Action immediate",
+        "CRITICAL": "Critique - Action immediate",
         "HIGH":     "Risque eleve",
         "MEDIUM":   "Risque moyen",
         "LOW":      "Trafic normal",
@@ -342,11 +348,11 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
 
             # Timestamp
             pdf.set_text_color(60, 60, 60)
-            pdf.cell(38, 6, ts, fill=True, border=1)
+            pdf.cell(38, 6, _sanitize(ts), fill=True, border=1)
 
             # Label (color-coded)
             pdf.set_text_color(180, 30, 30) if label_txt == "Malicious" else pdf.set_text_color(30, 130, 60)
-            pdf.cell(28, 6, label_txt, fill=True, border=1)
+            pdf.cell(28, 6, _sanitize(label_txt), fill=True, border=1)
 
             # Confidence
             pdf.set_text_color(40, 40, 40)
@@ -355,20 +361,20 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
             # Risk (color-coded)
             rgb_risk = RISK_CONFIG.get(risk, ("?", (100, 100, 100)))[1]
             pdf.set_text_color(*_safe_rgb(*rgb_risk))
-            pdf.cell(24, 6, risk, fill=True, border=1, align="C")
+            pdf.cell(24, 6, _sanitize(risk), fill=True, border=1, align="C")
 
             # Model
             pdf.set_text_color(60, 60, 180)
-            pdf.cell(34, 6, display_mdl, fill=True, border=1)
+            pdf.cell(34, 6, _sanitize(display_mdl), fill=True, border=1)
 
             # Message
             pdf.set_text_color(60, 60, 60)
-            pdf.cell(44, 6, message, fill=True, border=1, new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(44, 6, _sanitize(message), fill=True, border=1, new_x="LMARGIN", new_y="NEXT")
 
         except (KeyError, TypeError):
             continue  # Skip malformed entries gracefully
 
-    # â”€â”€ PAGE 3 â€” Recommendations + technical info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── PAGE 3 - Recommendations + technical info ────────────
     pdf.add_page()
     pdf.section_title("6", "RECOMMANDATIONS DE SECURITE", (150, 80, 20))
 
@@ -406,21 +412,21 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
         pdf.cell(8, 8, str(i), fill=True, border=1, align="C")
         pdf.set_font("Helvetica", "", 9)
         pdf.set_text_color(50, 50, 50)
-        pdf.multi_cell(0, 8, f" {rec}", fill=True, border=1)
+        pdf.multi_cell(0, 8, _sanitize(f" {rec}"), fill=True, border=1)
         pdf.ln(1)
 
     pdf.ln(4)
 
-    # Section 7 â€” Technical info
+    # Section 7 - Technical info
     pdf.section_title("7", "INFORMATIONS TECHNIQUES DU SYSTEME", (40, 100, 80))
     pdf.info_row("Framework ML",       SKLEARN_VERSION)
     pdf.info_row("API Backend",        "FastAPI 0.136 + Uvicorn")
     pdf.info_row("Hebergement",        "Render.com (Free Tier)")
-    pdf.info_row("Features modele",    f"{FEATURES_USED} features â€” id.resp_p exclu (biais port 23 Mirai)")
+    pdf.info_row("Features modele",    f"{FEATURES_USED} features - id.resp_p exclu (biais port 23 Mirai)")
     pdf.info_row("Modeles deployes",   ", ".join(MODEL_DISPLAY.values()))
     pdf.info_row("Dataset",            DATASET_NAME)
-    pdf.info_row("Normalisation",      "MinMaxScaler â€” detection auto si donnees brutes")
-    pdf.info_row("Stockage alertes",   "In-memory (max 1000 â€” FIFO) â€” perdu au redemarrage Render")
+    pdf.info_row("Normalisation",      "MinMaxScaler - detection auto si donnees brutes")
+    pdf.info_row("Stockage alertes",   "In-memory (max 1000 - FIFO) - perdu au redemarrage Render")
 
     pdf.ln(8)
     pdf.set_font("Helvetica", "I", 8)
@@ -433,4 +439,3 @@ def generer_rapport_pdf(alert_history: List[dict]) -> bytes:
     )
 
     return bytes(pdf.output())
-
