@@ -1,15 +1,57 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { apiService } from "../services/api";
 import { MODELS_INFO } from "../constants/theme";
 import { useIsMobile } from "../hooks/useIsMobile";
 
 const ATTACK_SCENARIOS = [
-  { id:"mirai_telnet",  label:"Mirai Telnet Scan",    icon:"[MAL]", color:"#ef4444", desc:"Scan Telnet signature Mirai botnet",    payload:{id_orig_p:51524,id_resp_p:23,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:2.93e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
-  { id:"mirai_rapide",  label:"Mirai Scan Rapide",    icon:"[MAL]", color:"#f97316", desc:"Variante rapide du scan Mirai",          payload:{id_orig_p:56305,id_resp_p:23,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0201,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:2,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:3.67e-8,pkt_ratio:0.0588,avg_orig_pkt_size:30,avg_resp_pkt_size:0}},
-  { id:"mirai_port23",  label:"Mirai Port 23 Massif", icon:"[MAL]", color:"#dc2626", desc:"Scan massif port 23 botnet IoT",         payload:{id_orig_p:60905,id_resp_p:23,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:1,hour:3,minute:0,day_of_week:6,inter_arrival_time:2.97e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
-  { id:"normal_1",      label:"Trafic Normal",         icon:"[OK]",  color:"#22c55e", desc:"Connexion legitime port aleatoire",      payload:{id_orig_p:43763,id_resp_p:14336,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0134,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}},
-  { id:"normal_2",      label:"Trafic Normal DNS",     icon:"[OK]",  color:"#06b6d4", desc:"Connexion reseau normale",               payload:{id_orig_p:43763,id_resp_p:11764,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.0167,orig_ip_bytes:0.0134,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:3.85e-6,pkt_ratio:0.0588,avg_orig_pkt_size:20,avg_resp_pkt_size:0}},
-  { id:"normal_3",      label:"Trafic Bidirectionnel", icon:"[OK]",  color:"#10b981", desc:"Echange bidirectionnel normal",          payload:{id_orig_p:34243,id_resp_p:49560,duration:0.0102,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:0.05,orig_ip_bytes:0.0602,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:2.97e-9,pkt_ratio:0.1765,avg_orig_pkt_size:45,avg_resp_pkt_size:0}},
+  {
+    id:'portscan_1',
+    label:'Port Scan - Horizontal Scan',
+    icon:'[SCAN]',
+    color:'#ef4444',
+    desc:'Horizontal port scan — real CTU-IoT data (95% confidence)',
+    payload:{id_orig_p:51524,id_resp_p:23,duration:2.999051,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:3,orig_ip_bytes:180,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:3,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:0.000738,pkt_ratio:1.0,avg_orig_pkt_size:60,avg_resp_pkt_size:0,model:"random_forest"}
+  },
+  {
+    id:'portscan_2',
+    label:'Port Scan - Fast Scan',
+    icon:'[SCAN]',
+    color:'#f97316',
+    desc:'Fast horizontal scan — real CTU-IoT data (91.9% confidence)',
+    payload:{id_orig_p:56305,id_resp_p:23,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:60,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:2,is_well_known_port:1,hour:15,minute:30,day_of_week:2,inter_arrival_time:0.009244,pkt_ratio:1.0,avg_orig_pkt_size:60,avg_resp_pkt_size:0,model:"random_forest"}
+  },
+  {
+    id:'attack_ssh_1',
+    label:'Attack - SSH Brute Force',
+    icon:'[ATK]',
+    color:'#8b5cf6',
+    desc:'SSH brute force attack — real CTU-IoT data (79% confidence)',
+    payload:{id_orig_p:53190,id_resp_p:22,duration:2.503441,orig_bytes:589,resp_bytes:2565,missed_bytes:0,orig_pkts:16,orig_ip_bytes:1429,resp_pkts:14,resp_ip_bytes:3301,is_orig_local:1,orig_h_count:154886,resp_h_count:5,is_well_known_port:1,hour:19,minute:19,day_of_week:5,inter_arrival_time:0.003479,pkt_ratio:0.533333,avg_orig_pkt_size:89.3125,avg_resp_pkt_size:235.785714,model:"random_forest"}
+  },
+  {
+    id:'attack_ssh_2',
+    label:'Attack - SSH Brute Force v2',
+    icon:'[ATK]',
+    color:'#dc2626',
+    desc:'SSH brute force variant — real CTU-IoT data (79% confidence)',
+    payload:{id_orig_p:53193,id_resp_p:22,duration:2.089540,orig_bytes:589,resp_bytes:2565,missed_bytes:0,orig_pkts:14,orig_ip_bytes:1325,resp_pkts:14,resp_ip_bytes:3301,is_orig_local:1,orig_h_count:154886,resp_h_count:5,is_well_known_port:1,hour:19,minute:19,day_of_week:5,inter_arrival_time:0.289234,pkt_ratio:0.5,avg_orig_pkt_size:94.642857,avg_resp_pkt_size:235.785714,model:"random_forest"}
+  },
+  {
+    id:'benign_1',
+    label:'Normal - Legitimate Traffic',
+    icon:'[OK]',
+    color:'#22c55e',
+    desc:'Normal benign traffic — real CTU-IoT data (61.4% confidence)',
+    payload:{id_orig_p:43763,id_resp_p:14336,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0,pkt_ratio:1.0,avg_orig_pkt_size:40,avg_resp_pkt_size:0,model:"random_forest"}
+  },
+  {
+    id:'benign_2',
+    label:'Normal - Internal Connection',
+    icon:'[OK]',
+    color:'#06b6d4',
+    desc:'Normal internal connection — real CTU-IoT data (61.1% confidence)',
+    payload:{id_orig_p:43763,id_resp_p:11764,duration:0,orig_bytes:0,resp_bytes:0,missed_bytes:0,orig_pkts:1,orig_ip_bytes:40,resp_pkts:0,resp_ip_bytes:0,is_orig_local:1,orig_h_count:991061,resp_h_count:1,is_well_known_port:0,hour:15,minute:30,day_of_week:2,inter_arrival_time:0.970448,pkt_ratio:1.0,avg_orig_pkt_size:40,avg_resp_pkt_size:0,model:"random_forest"}
+  },
 ];
 
 const MANUAL_FIELDS = [
