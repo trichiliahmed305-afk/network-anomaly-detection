@@ -26,13 +26,6 @@ export default function App() {
   const [loading,    setLoading]    = useState(false);
   const [tab,        setTab]        = useState("dashboard");
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [mappings,   setMappings]   = useState(null);
-
-  useEffect(() => {
-    apiService.getMappings()
-      .then(res => setMappings(res.data.label_mappings))
-      .catch(console.error);
-  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -50,7 +43,9 @@ export default function App() {
         models:         raw.models             ?? {},
       });
       setAlerts(a.data.alertes || a.data.alerts || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error("Refresh error:", e);
+    }
     setLoading(false);
   }, []);
 
@@ -72,8 +67,12 @@ export default function App() {
   }, [alerts]);
 
   const handleClearAlerts = async () => {
-    await apiService.clearAlerts();
-    refresh();
+    try {
+      await apiService.clearAlerts();
+      refresh();
+    } catch (e) {
+      console.error("Clear error:", e);
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -122,7 +121,7 @@ export default function App() {
 
       <main className="page-content">
 
-        {/* ── DASHBOARD ── */}
+        {/* DASHBOARD */}
         {tab === "dashboard" && (
           <>
             <div className="grid grid--4col">
@@ -172,25 +171,21 @@ export default function App() {
             </div>
 
             <AlertsTable alerts={alerts.slice(0, 8)} />
-
             <AttackSimulator onResult={() => setTimeout(refresh, 500)} />
           </>
         )}
 
-        {/* ── PREDICT ── */}
+        {/* PREDICT */}
         {tab === "predict" && (
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
-            <PredictForm
-              onResult={() => setTimeout(refresh, 300)}
-              mappings={mappings}
-            />
+            <PredictForm onResult={() => setTimeout(refresh, 300)} />
           </div>
         )}
 
-        {/* ── ALERTS ── */}
+        {/* ALERTS */}
         {tab === "alerts" && <AlertsTable alerts={alerts} />}
 
-        {/* ── MODELS ── */}
+        {/* MODELS */}
         {tab === "models" && <ModelsTab modelData={modelData} />}
 
       </main>
