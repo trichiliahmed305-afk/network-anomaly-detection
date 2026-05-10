@@ -8,5 +8,6 @@ numpy
 fpdf2
 python-multipart
 openpyxl
+matplotlib==3.9.0
 # force-rebuild-202605092039
-# rebuild-202605092113
+# rebuild-2matplotlib==3.9.002605092113
