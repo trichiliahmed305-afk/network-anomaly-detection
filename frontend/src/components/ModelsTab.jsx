@@ -1,147 +1,121 @@
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer
-} from "recharts";
-import { MODELS_INFO, COLORS } from "../constants/theme";
-import { useIsMobile } from "../hooks/useIsMobile";
+import { useState, useEffect } from "react";
+import { apiService } from "../services/api";
 
-export default function ModelsTab({ modelData }) {
-  const isMobile = useIsMobile();
+// ============================================================
+// ModelsTab.jsx — affiche les metriques REELLES des modeles
+// Les metriques viennent de /models qui retourne les valeurs
+// exactes du notebook CICIDS-2017 (MODEL_METRICS dans main.py)
+// ============================================================
+
+const MODEL_COLORS = {
+  random_forest:    "#3b82f6",
+  xgboost:          "#22c55e",
+  decision_tree:    "#f59e0b",
+  knn:              "#8b5cf6",
+  svm:              "#06b6d4",
+  isolation_forest: "#6b7280",
+};
+
+export default function ModelsTab() {
+  const [models,  setModels]  = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiService.getModels()
+      .then(r => setModels(r.data.available || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div style={{ textAlign:"center", padding:40, color:"#9ca3af" }}>
+      Chargement des modeles...
+    </div>
+  );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-      {/* ── Titre ── */}
-      <div>
-        <h2 style={{ fontFamily: "JetBrains Mono, monospace", fontSize: "1rem", marginBottom: 4 }}>
-          🤖 Modèles ML entraînés
-        </h2>
-        <p style={{ fontSize: "0.8rem", color: COLORS.text2 }}>
-          6 modèles comparés — Random Forest sélectionné pour la production
+    <div>
+      <div className="card" style={{ marginBottom:16 }}>
+        <p className="card__title">Modeles ML — CICIDS-2017</p>
+        <p style={{ fontSize:"0.8rem", color:"#9ca3af", margin:0 }}>
+          Metriques reelles obtenues lors de l'entrainement sur le dataset CICIDS-2017.
+          Dataset : 2,099,971 connexions — 27 types d'attaques — sklearn 1.6.1
         </p>
       </div>
 
-      {/* ── Grille des 6 modèles ── */}
-      <div className="grid grid--3col">
-        {MODELS_INFO.map((m) => (
-          <div key={m.key} className="model-card" style={{ "--model-color": m.color }}>
+      <div className="grid grid--2col">
+        {models.map(model => {
+          const color  = MODEL_COLORS[model.key] || "#6b7280";
+          const isIso  = model.key === "isolation_forest";
 
-            {/* Badge status */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-              <span style={{ fontSize: "1.6rem" }}>{m.icon}</span>
-              <span style={{
-                fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px",
-                borderRadius: 999, textTransform: "uppercase",
-                background: m.status === "active" ? "rgba(34,197,94,0.15)" : "rgba(156,163,175,0.15)",
-                color: m.status === "active" ? "#22c55e" : "#9ca3af",
-              }}>
-                {m.status === "active" ? "● Actif" : "○ Entraîné"}
-              </span>
-            </div>
+          return (
+            <div key={model.key} className="card"
+              style={{ borderLeft:`3px solid ${color}` }}>
 
-            <h3 style={{ color: m.color, marginBottom: 2, fontSize: "0.95rem" }}>{m.name}</h3>
-            <p style={{ fontSize: "0.72rem", color: COLORS.text2, marginBottom: 4 }}>{m.desc}</p>
-
-            <span style={{
-              display: "inline-block", fontSize: "0.65rem", fontWeight: 700,
-              padding: "2px 8px", borderRadius: 999, marginBottom: 12,
-              background: m.color + "20", color: m.color
-            }}>
-              {m.type}
-            </span>
-
-            {/* Métriques */}
-            {[["Accuracy", m.acc], ["F1 Score", m.f1]].map(([label, val]) => (
-              <div key={label} style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: "0.75rem", color: COLORS.text2 }}>{label}</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: m.color }}>{val}%</span>
+              {/* Model header */}
+              <div style={{ display:"flex", justifyContent:"space-between",
+                            alignItems:"center", marginBottom:14 }}>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:"0.95rem", color }}>
+                    {model.name}
+                  </div>
+                  <div style={{ fontSize:"0.72rem", color:"#6b7280", marginTop:2 }}>
+                    {isIso ? "Non-supervise — Detection zero-day"
+                           : "Supervise — Classification binaire"}
+                  </div>
                 </div>
-                <div style={{ background: "#1f2937", borderRadius: 4, height: 5 }}>
-                  <div style={{
-                    width: `${val}%`, height: "100%",
-                    background: m.color, borderRadius: 4,
-                    transition: "width 1.2s cubic-bezier(0.4,0,0.2,1)"
-                  }} />
+                <div style={{
+                  background: color + "20", color, borderRadius:6,
+                  padding:"4px 10px", fontSize:"0.78rem", fontWeight:700
+                }}>
+                  {isIso ? "ANOMALIE" : "CLASSIF."}
                 </div>
               </div>
-            ))}
-          </div>
-        ))}
-      </div>
 
-      {/* ── Graphique comparaison ── */}
-      <div className="card">
-        <p className="card__title">📊 Comparaison des performances</p>
-        <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-          <BarChart
-            data={MODELS_INFO.map(m => ({
-              name: m.name.replace(" ", "\n"),
-              Accuracy: m.acc,
-              "F1 Score": m.f1,
-            }))}
-            margin={{ top: 5, right: 16, left: 0, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-            <XAxis dataKey="name" stroke={COLORS.text2} fontSize={isMobile ? 9 : 11} interval={0} />
-            <YAxis stroke={COLORS.text2} fontSize={10} domain={[0, 100]} width={32} />
-            <Tooltip contentStyle={{ background: "#1f2937", border: `1px solid ${COLORS.border}`, fontSize: 12 }} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="Accuracy"  fill={COLORS.blue}   radius={[4, 4, 0, 0]} />
-            <Bar dataKey="F1 Score"  fill={COLORS.purple} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ── Tableau récapitulatif ── */}
-      <div className="card">
-        <p className="card__title">📋 Tableau récapitulatif</p>
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead className="data-table__head">
-              <tr>
-                <th>Modèle</th>
-                <th>Type</th>
-                <th>Accuracy</th>
-                <th>F1 Score</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody className="data-table__body">
-              {MODELS_INFO.map(m => (
-                <tr key={m.key}>
-                  <td>
-                    <span style={{ marginRight: 8 }}>{m.icon}</span>
-                    <span style={{ color: m.color, fontWeight: 600 }}>{m.name}</span>
-                  </td>
-                  <td>
-                    <span style={{
-                      fontSize: "0.7rem", padding: "2px 8px", borderRadius: 999,
-                      background: m.color + "20", color: m.color
+              {/* Metrics */}
+              {isIso ? (
+                <div style={{ color:"#9ca3af", fontSize:"0.8rem", padding:"10px 0" }}>
+                  L'Isolation Forest est un modele non-supervise.
+                  Il ne possede pas de metriques de classification standard.
+                  Accuracy sur test set : <strong style={{ color:"#f59e0b" }}>
+                    {model.accuracy}%
+                  </strong>
+                </div>
+              ) : (
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                  {[
+                    { label: "Accuracy",  value: model.accuracy  },
+                    { label: "Precision", value: model.precision },
+                    { label: "Recall",    value: model.recall    },
+                    { label: "F1-Score",  value: model.f1_score  },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{
+                      background:"#1f2937", borderRadius:8, padding:"10px 12px"
                     }}>
-                      {m.type}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 600, color: m.acc > 90 ? COLORS.benign : COLORS.warning }}>
-                    {m.acc}%
-                  </td>
-                  <td style={{ fontWeight: 600, color: m.f1 > 90 ? COLORS.benign : COLORS.warning }}>
-                    {m.f1}%
-                  </td>
-                  <td>
-                    <span style={{
-                      fontSize: "0.7rem", padding: "2px 8px", borderRadius: 999, fontWeight: 700,
-                      background: m.status === "active" ? "rgba(34,197,94,0.15)" : "rgba(156,163,175,0.15)",
-                      color: m.status === "active" ? "#22c55e" : "#9ca3af",
-                    }}>
-                      {m.status === "active" ? "● Actif" : "○ Entraîné"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      <div style={{ fontSize:"0.7rem", color:"#9ca3af",
+                                    marginBottom:4 }}>
+                        {label}
+                      </div>
+                      <div style={{ fontSize:"1.1rem", fontWeight:700, color }}>
+                        {value?.toFixed(3)}%
+                      </div>
+                      {/* Progress bar */}
+                      <div style={{ marginTop:6, height:4, background:"#374151",
+                                    borderRadius:2, overflow:"hidden" }}>
+                        <div style={{
+                          height:"100%", borderRadius:2,
+                          background:color,
+                          width:`${Math.min(value || 0, 100)}%`,
+                          transition:"width 0.6s ease"
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

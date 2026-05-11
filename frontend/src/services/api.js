@@ -1,19 +1,40 @@
-﻿import axios from "axios";
+// ============================================================
+// api.js - Service API ITGATE v4.0
+// Tous les appels vers le backend FastAPI CICIDS-2017
+// ============================================================
+
+import axios from "axios";
 
 const BASE_URL = "https://itgate-anomaly-api.onrender.com";
 
-const api = axios.create({ baseURL: BASE_URL, timeout: 30000 });
+const api = axios.create({
+  baseURL: BASE_URL,
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
+});
 
 export const apiService = {
-  getStatus:      ()             => api.get("/status"),
-  getStats:       ()             => api.get("/stats"),
-  getAlerts:      (limit = 100)  => api.get(`/alerts?limit=${limit}`),
-  clearAlerts:    ()             => api.delete("/alerts/clear"),
-  predict:        (payload)      => api.post("/predict", payload),
-  downloadReport: ()             => api.get("/report", {
-    responseType: "blob",
-    headers: { Accept: "application/pdf" }
-  }),
-};
+  // Prediction unique
+  predict: (data) => api.post("/predict", data),
 
-export default apiService;
+  // Stats — utilise predictions[] cote backend (Benign + Malicious)
+  getStats: () => api.get("/stats"),
+
+  // Alertes — Malicious ONLY
+  getAlerts: () => api.get("/alerts"),
+
+  // Historique complet — toutes les predictions
+  getHistory: () => api.get("/history"),
+
+  // Status
+  getStatus: () => api.get("/status"),
+
+  // Modeles avec metriques reelles
+  getModels: () => api.get("/models"),
+
+  // Effacer alertes ET predictions
+  clearAlerts: () => api.delete("/alerts/clear"),
+
+  // Rapport PDF
+  downloadReport: () => api.get("/report", { responseType: "blob" }),
+};
