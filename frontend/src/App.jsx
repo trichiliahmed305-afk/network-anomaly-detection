@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Activity, AlertTriangle, CheckCircle, Shield } from "lucide-react";
 import {
   LineChart, Line, PieChart, Pie, Cell,
@@ -18,25 +18,41 @@ import { apiService }  from "./services/api";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { COLORS }      from "./constants/theme";
 
+// Build timeline buckets from a flat list of predictions
+function buildTimeline(allPreds) {
+  const buckets = {};
+  allPreds.forEach(p => {
+    const t = (p.timestamp || "").slice(11, 16) || "??:??";
+    if (!buckets[t]) buckets[t] = { time: t, malicious: 0, benign: 0 };
+    if (p.label === "Malicious") buckets[t].malicious++;
+    else                         buckets[t].benign++;
+  });
+  return Object.values(buckets).slice(-12);
+}
+
 export default function App() {
-  const isMobile                    = useIsMobile();
+  const isMobile = useIsMobile();
+
   const [stats,      setStats]      = useState(null);
-  const [alerts,     setAlerts]     = useState([]);   // Malicious only
-  const [history,    setHistory]    = useState([]);   // timeline buckets
+  const [alerts,     setAlerts]     = useState([]);     // Malicious only
+  const [allPreds,   setAllPreds]   = useState([]);     // ALL predictions
   const [loading,    setLoading]    = useState(false);
   const [tab,        setTab]        = useState("dashboard");
   const [pdfLoading, setPdfLoading] = useState(false);
 
+  // Derived: timeline built from allPreds
+  const history = buildTimeline(allPreds);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [s, a] = await Promise.all([
+      // Always fetch stats + alerts in parallel
+      const [sRes, aRes] = await Promise.all([
         apiService.getStats(),
         apiService.getAlerts(),
       ]);
 
-      const raw = s.data;
-      // Correct field mapping for CICIDS-2017 backend v4.0
+      const raw = sRes.data;
       setStats({
         total_analyzed: raw.total          ?? 0,
         malicious:      raw.malicious      ?? 0,
@@ -45,8 +61,22 @@ export default function App() {
         avg_confidence: raw.avg_confidence ?? 0,
       });
 
-      // alerts = Malicious only (from /alerts endpoint)
-      setAlerts(a.data.alerts || a.data.alertes || []);
+      // alerts = Malicious only
+      const mal = aRes.data.alerts || aRes.data.alertes || [];
+      setAlerts(mal);
+
+      // Try /history for all predictions (timeline)
+      // Falls back silently if endpoint not available yet
+      try {
+        const hRes   = await apiService.getHistory();
+        const hPreds = hRes.data.history || [];
+        if (hPreds.length > 0) {
+          setAllPreds(hPreds);
+        }
+      } catch {
+        // /history not available — build timeline from alerts only
+        // This is a degraded mode: timeline shows only malicious
+      }
 
     } catch (e) {
       console.error("Refresh error:", e);
@@ -54,39 +84,32 @@ export default function App() {
     setLoading(false);
   }, []);
 
-  // Fetch history separately for the timeline chart
-  const refreshHistory = useCallback(async () => {
-    try {
-      const h = await apiService.getHistory();
-      const allPredictions = h.data.history || [];
-
-      // Build time buckets from all predictions
-      const buckets = {};
-      allPredictions.forEach(p => {
-        const t = p.timestamp?.slice(11, 16) || "?";
-        if (!buckets[t]) buckets[t] = { time: t, malicious: 0, benign: 0 };
-        if (p.label === "Malicious") buckets[t].malicious++;
-        else                         buckets[t].benign++;
-      });
-      setHistory(Object.values(buckets).slice(-12));
-    } catch {
-      // /history may not exist yet — fall back silently
-    }
-  }, []);
-
+  useEffect(() => { refresh(); }, [refresh]);
   useEffect(() => {
-    refresh();
-    refreshHistory();
-  }, [refresh, refreshHistory]);
-
-  useEffect(() => {
-    const t = setInterval(() => { refresh(); refreshHistory(); }, 5000);
+    const t = setInterval(refresh, 5000);
     return () => clearInterval(t);
-  }, [refresh, refreshHistory]);
+  }, [refresh]);
+
+  // Called after each prediction — append locally for instant timeline update
+  const onResult = useCallback((prediction) => {
+    if (prediction) {
+      setAllPreds(prev => [...prev, {
+        timestamp:  new Date().toISOString(),
+        label:      prediction.label,
+        confidence: prediction.confidence,
+        model:      prediction.model,
+      }]);
+    }
+    setTimeout(refresh, 600);
+  }, [refresh]);
 
   const handleClearAlerts = async () => {
-    try { await apiService.clearAlerts(); refresh(); refreshHistory(); }
-    catch (e) { console.error(e); }
+    try {
+      await apiService.clearAlerts();
+      setAlerts([]);
+      setAllPreds([]);
+      setStats({ total_analyzed:0, malicious:0, benign:0, detection_rate:0 });
+    } catch (e) { console.error(e); }
   };
 
   const handleDownloadPDF = async () => {
@@ -95,8 +118,8 @@ export default function App() {
       const response = await apiService.downloadReport();
       const url  = URL.createObjectURL(response.data);
       const link = document.createElement("a");
-      link.href = url;
-      link.download = `anomaly_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      link.href     = url;
+      link.download = `ITGATE_Report_${new Date().toISOString().slice(0,10)}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -107,12 +130,10 @@ export default function App() {
     setPdfLoading(false);
   };
 
-  const pieData = stats ? [
+  const pieData = stats && (stats.malicious > 0 || stats.benign > 0) ? [
     { name: "Malveillant", value: stats.malicious, color: COLORS.malicious },
     { name: "Benin",       value: stats.benign,    color: COLORS.benign    },
   ].filter(d => d.value > 0) : [];
-
-  const onResult = () => setTimeout(() => { refresh(); refreshHistory(); }, 600);
 
   return (
     <div style={{ minHeight:"100vh", background:"#0a0e1a", overflowX:"hidden" }}>
@@ -127,7 +148,6 @@ export default function App() {
         {/* ── DASHBOARD ─────────────────────────────────── */}
         {tab === "dashboard" && (
           <>
-            {/* Stats cards — from /stats which uses all predictions */}
             <div className="grid grid--4col">
               <StatCard icon={Activity}      label="Total Analysees"  value={stats?.total_analyzed ?? 0}        color={COLORS.blue} />
               <StatCard icon={AlertTriangle} label="Malveillantes"    value={stats?.malicious ?? 0}             color={COLORS.malicious} />
@@ -135,25 +155,35 @@ export default function App() {
               <StatCard icon={Shield}        label="Taux Detection"   value={`${stats?.detection_rate ?? 0}%`} color={COLORS.yellow} />
             </div>
 
-            {/* Charts */}
             <div className="grid grid--2col">
+              {/* Timeline — built from allPreds locally */}
               <div className="card">
                 <p className="card__title">Timeline des Detections</p>
-                <ResponsiveContainer width="100%" height={isMobile ? 200 : 220}>
-                  <LineChart data={history}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
-                    <XAxis dataKey="time" stroke={COLORS.text2} fontSize={10} />
-                    <YAxis stroke={COLORS.text2} fontSize={10} width={28} />
-                    <Tooltip contentStyle={{ background:"#1f2937", border:`1px solid ${COLORS.border}`, fontSize:12 }} />
-                    <Legend wrapperStyle={{ fontSize:12 }} />
-                    <Line type="monotone" dataKey="malicious" stroke={COLORS.malicious} strokeWidth={2} dot={false} name="Malveillant" />
-                    <Line type="monotone" dataKey="benign"    stroke={COLORS.benign}    strokeWidth={2} dot={false} name="Benin" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {history.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={isMobile ? 200 : 220}>
+                    <LineChart data={history}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
+                      <XAxis dataKey="time" stroke={COLORS.text2} fontSize={10} />
+                      <YAxis stroke={COLORS.text2} fontSize={10} width={28} />
+                      <Tooltip contentStyle={{ background:"#1f2937", border:`1px solid ${COLORS.border}`, fontSize:12 }} />
+                      <Legend wrapperStyle={{ fontSize:12 }} />
+                      <Line type="monotone" dataKey="malicious" stroke={COLORS.malicious} strokeWidth={2} dot={true} name="Malveillant" />
+                      <Line type="monotone" dataKey="benign"    stroke={COLORS.benign}    strokeWidth={2} dot={true} name="Benin" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ height:220, display:"flex", alignItems:"center",
+                                justifyContent:"center", color:COLORS.text2,
+                                fontSize:"0.85rem", flexDirection:"column", gap:8 }}>
+                    <span style={{ fontSize:"1.5rem" }}>📊</span>
+                    Lancez des tests pour voir la timeline
+                  </div>
+                )}
               </div>
 
+              {/* Pie chart */}
               <div className="card">
-                <p className="card__title">Distribution</p>
+                <p className="card__title">Distribution du Trafic</p>
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={isMobile ? 200 : 220}>
                     <PieChart>
@@ -170,31 +200,23 @@ export default function App() {
                   </ResponsiveContainer>
                 ) : (
                   <div style={{ height:220, display:"flex", alignItems:"center",
-                                justifyContent:"center", color:COLORS.text2, fontSize:"0.85rem" }}>
-                    Aucune donnee — lancez un test
+                                justifyContent:"center", color:COLORS.text2,
+                                fontSize:"0.85rem", flexDirection:"column", gap:8 }}>
+                    <span style={{ fontSize:"1.5rem" }}>🥧</span>
+                    Aucune donnee disponible
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Recent alerts — Malicious only */}
-            <AlertsTable alerts={alerts.slice(0, 8)} title="Alertes Recentes" />
-
-            {/* Scenario simulator */}
+            <AlertsTable alerts={alerts.slice(0, 8)} title="Alertes Recentes (Malveillant)" />
             <AttackSimulator onResult={onResult} />
           </>
         )}
 
-        {/* ── ANALYSE ───────────────────────────────────── */}
         {tab === "analysis" && <AnalysisPage onResult={onResult} />}
-
-        {/* ── ALERTES ───────────────────────────────────── */}
-        {tab === "alerts" && (
-          <AlertsTable alerts={alerts} title={`Toutes les Alertes (${alerts.length})`} />
-        )}
-
-        {/* ── MODELES ───────────────────────────────────── */}
-        {tab === "models" && <ModelsTab />}
+        {tab === "alerts"   && <AlertsTable alerts={alerts} title={`Toutes les Alertes (${alerts.length})`} />}
+        {tab === "models"   && <ModelsTab />}
 
       </main>
     </div>
