@@ -168,6 +168,12 @@ def predire(data: TrafficData):
             prediction = 1 if raw_pred == -1 else 0
             scores = model.score_samples(X)
             confidence = round(min(abs(float(scores[0])) * 100, 99.9), 2)
+        elif model_key == 'svm' and not hasattr(model, 'predict_proba'):
+            # LinearSVC n'a pas predict_proba — utiliser decision_function
+            prediction = int(model.predict(X)[0])
+            decision   = model.decision_function(X)[0]
+            # Convertir le score de decision en confiance [0, 100]
+            confidence = round(min(float(abs(decision)) * 20 + 50, 99.9), 2)
         else:
             prediction = int(model.predict(X)[0])
             probas     = model.predict_proba(X)[0]

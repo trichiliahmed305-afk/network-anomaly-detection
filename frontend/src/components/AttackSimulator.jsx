@@ -2,36 +2,92 @@ import { useState } from "react";
 import { apiService } from "../services/api";
 import { COLORS } from "../constants/theme";
 
+// Scenarios bases sur les vraies signatures CTU-IoT-Malware-Capture
+// Valeurs pre-normalisees compatibles avec le nouveau scaler MinMaxScaler
 const ATTACK_SCENARIOS = [
   {
     id: "mirai_telnet", label: "Mirai Telnet Scan", icon: "🔍", color: "#ef4444",
     description: "Scan port 23 botnet Mirai IoT",
-    payload: { id_orig_p: 51524.0, id_resp_p: 23.0, duration: 0.0102, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.05, orig_ip_bytes: 0.0602, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 3.0, is_well_known_port: 1, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 2.93e-9, pkt_ratio: 0.1765, avg_orig_pkt_size: 45.0, avg_resp_pkt_size: 0.0, model: "random_forest" }
+    payload: {
+      id_orig_p: 51524, id_resp_p: 23,
+      duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0,
+      orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0,
+      is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0,
+      is_well_known_port: 1, hour: 3, minute: 0, day_of_week: 6,
+      inter_arrival_time: 0.0, pkt_ratio: 0.0588,
+      avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0,
+      model: "random_forest"
+    }
   },
   {
     id: "port_scan", label: "Port Scan Port 9527", icon: "🔎", color: "#f97316",
     description: "Scan horizontal port non standard",
-    payload: { id_orig_p: 43763.0, id_resp_p: 9527.0, duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0, is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 0.0, pkt_ratio: 0.0588, avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0, model: "xgboost" }
+    payload: {
+      id_orig_p: 43763, id_resp_p: 9527,
+      duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0,
+      orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0,
+      is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0,
+      is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2,
+      inter_arrival_time: 0.0, pkt_ratio: 0.0588,
+      avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0,
+      model: "xgboost"
+    }
   },
   {
     id: "brute_ssh", label: "Brute Force SSH", icon: "🔐", color: "#8b5cf6",
     description: "Attaque SSH par dictionnaire port 22",
-    payload: { id_orig_p: 45678.0, id_resp_p: 22.0, duration: 0.5, orig_bytes: 200.0, resp_bytes: 50.0, missed_bytes: 0.0, orig_pkts: 10.0, orig_ip_bytes: 300.0, resp_pkts: 5.0, resp_ip_bytes: 100.0, is_orig_local: 0, orig_h_count: 1000.0, resp_h_count: 1.0, is_well_known_port: 1, hour: 2, minute: 30, day_of_week: 5, inter_arrival_time: 0.05, pkt_ratio: 2.0, avg_orig_pkt_size: 27.3, avg_resp_pkt_size: 16.7, model: "knn" }
+    payload: {
+      id_orig_p: 45678, id_resp_p: 22,
+      duration: 0.5, orig_bytes: 200.0, resp_bytes: 50.0, missed_bytes: 0.0,
+      orig_pkts: 10.0, orig_ip_bytes: 300.0, resp_pkts: 5.0, resp_ip_bytes: 100.0,
+      is_orig_local: 0, orig_h_count: 1000.0, resp_h_count: 1.0,
+      is_well_known_port: 1, hour: 2, minute: 30, day_of_week: 5,
+      inter_arrival_time: 0.05, pkt_ratio: 2.0,
+      avg_orig_pkt_size: 27.3, avg_resp_pkt_size: 16.7,
+      model: "knn"
+    }
   },
   {
     id: "ddos_flood", label: "DDoS Flood Massif", icon: "💥", color: "#dc2626",
     description: "Flood massif vers port 80",
-    payload: { id_orig_p: 33333.0, id_resp_p: 80.0, duration: 0.002, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 1.0, orig_ip_bytes: 48.0, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 0, orig_h_count: 800.0, resp_h_count: 1.0, is_well_known_port: 1, hour: 1, minute: 45, day_of_week: 6, inter_arrival_time: 0.002, pkt_ratio: 1.0, avg_orig_pkt_size: 24.0, avg_resp_pkt_size: 0.0, model: "random_forest" }
+    payload: {
+      id_orig_p: 33333, id_resp_p: 80,
+      duration: 0.002, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0,
+      orig_pkts: 1.0, orig_ip_bytes: 48.0, resp_pkts: 0.0, resp_ip_bytes: 0.0,
+      is_orig_local: 0, orig_h_count: 800.0, resp_h_count: 1.0,
+      is_well_known_port: 1, hour: 1, minute: 45, day_of_week: 6,
+      inter_arrival_time: 0.002, pkt_ratio: 1.0,
+      avg_orig_pkt_size: 24.0, avg_resp_pkt_size: 0.0,
+      model: "random_forest"
+    }
   },
   {
     id: "botnet_c2", label: "Botnet C2 Communication", icon: "🤖", color: "#06b6d4",
     description: "Communication Command and Control IRC",
-    payload: { id_orig_p: 22222.0, id_resp_p: 6667.0, duration: 300.0, orig_bytes: 500.0, resp_bytes: 500.0, missed_bytes: 0.0, orig_pkts: 50.0, orig_ip_bytes: 600.0, resp_pkts: 50.0, resp_ip_bytes: 600.0, is_orig_local: 1, orig_h_count: 3.0, resp_h_count: 1.0, is_well_known_port: 0, hour: 3, minute: 30, day_of_week: 6, inter_arrival_time: 6.0, pkt_ratio: 1.0, avg_orig_pkt_size: 11.8, avg_resp_pkt_size: 11.8, model: "decision_tree" }
+    payload: {
+      id_orig_p: 22222, id_resp_p: 6667,
+      duration: 300.0, orig_bytes: 500.0, resp_bytes: 500.0, missed_bytes: 0.0,
+      orig_pkts: 50.0, orig_ip_bytes: 600.0, resp_pkts: 50.0, resp_ip_bytes: 600.0,
+      is_orig_local: 1, orig_h_count: 3.0, resp_h_count: 1.0,
+      is_well_known_port: 0, hour: 3, minute: 30, day_of_week: 6,
+      inter_arrival_time: 6.0, pkt_ratio: 1.0,
+      avg_orig_pkt_size: 11.8, avg_resp_pkt_size: 11.8,
+      model: "decision_tree"
+    }
   },
   {
     id: "normal_udp", label: "Trafic Normal UDP", icon: "✅", color: "#22c55e",
     description: "Connexion UDP legitime port aleatoire",
-    payload: { id_orig_p: 43763.0, id_resp_p: 14336.0, duration: 0.0, orig_bytes: 0.0, resp_bytes: 0.0, missed_bytes: 0.0, orig_pkts: 0.0167, orig_ip_bytes: 0.0134, resp_pkts: 0.0, resp_ip_bytes: 0.0, is_orig_local: 1, orig_h_count: 991061.0, resp_h_count: 1.0, is_well_known_port: 0, hour: 15, minute: 30, day_of_week: 2, inter_arrival_time: 0.0, pkt_ratio: 0.0588, avg_orig_pkt_size: 20.0, avg_resp_pkt_size: 0.0, model: "random_forest" }
+    payload: {
+      id_orig_p: 43763, id_resp_p: 14336,
+      duration: 1.5, orig_bytes: 500.0, resp_bytes: 200.0, missed_bytes: 0.0,
+      orig_pkts: 5.0, orig_ip_bytes: 600.0, resp_pkts: 3.0, resp_ip_bytes: 250.0,
+      is_orig_local: 1, orig_h_count: 10.0, resp_h_count: 5.0,
+      is_well_known_port: 0, hour: 14, minute: 30, day_of_week: 1,
+      inter_arrival_time: 0.5, pkt_ratio: 1.67,
+      avg_orig_pkt_size: 100.0, avg_resp_pkt_size: 62.5,
+      model: "random_forest"
+    }
   },
 ];
 
@@ -83,7 +139,7 @@ export default function AttackSimulator({ onResult }) {
 
           return (
             <div key={scenario.id} className="simulator-card"
-              style={{ borderColor: res ? (isM ? COLORS.malicious : COLORS.benign) : undefined }}>
+              style={{ borderColor: res ? (res.error ? COLORS.warning : isM ? COLORS.malicious : COLORS.benign) : undefined }}>
 
               <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
                 <span style={{ fontSize:"1.3rem" }}>{scenario.icon}</span>
@@ -101,7 +157,11 @@ export default function AttackSimulator({ onResult }) {
               </div>
 
               {res && !res.error && (
-                <div style={{ background:isM ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)", borderRadius:8, padding:"8px 12px", marginBottom:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{
+                  background: isM ? "rgba(239,68,68,0.08)" : "rgba(34,197,94,0.08)",
+                  borderRadius:8, padding:"8px 12px", marginBottom:10,
+                  display:"flex", justifyContent:"space-between", alignItems:"center"
+                }}>
                   <span style={{ fontWeight:700, fontSize:"0.82rem", color:isM ? COLORS.malicious : COLORS.benign }}>
                     {isM ? "Malicious" : "Benign"}
                   </span>
@@ -112,8 +172,8 @@ export default function AttackSimulator({ onResult }) {
               )}
 
               {res?.error && (
-                <div style={{ color:COLORS.malicious, fontSize:"0.72rem", marginBottom:10, wordBreak:"break-word" }}>
-                  Erreur : {res.error}
+                <div style={{ color:COLORS.warning, fontSize:"0.72rem", marginBottom:10, wordBreak:"break-word" }}>
+                  {res.error}
                 </div>
               )}
 
