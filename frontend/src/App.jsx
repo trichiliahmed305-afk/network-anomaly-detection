@@ -6,13 +6,13 @@ import {
   ResponsiveContainer, Legend
 } from "recharts";
 
-import Header           from "./components/Header";
-import NavBar           from "./components/NavBar";
-import StatCard         from "./components/StatCard";
-import AlertsTable      from "./components/AlertsTable";
-import ModelsTab        from "./components/ModelsTab";
-import PredictForm      from "./components/PredictForm";
-import AttackSimulator  from "./components/AttackSimulator";
+import Header          from "./components/Header";
+import NavBar          from "./components/NavBar";
+import StatCard        from "./components/StatCard";
+import AlertsTable     from "./components/AlertsTable";
+import ModelsTab       from "./components/ModelsTab";
+import AttackSimulator from "./components/AttackSimulator";
+import AnalysisPage    from "./components/AnalysisPage";
 
 import { apiService }  from "./services/api";
 import { useIsMobile } from "./hooks/useIsMobile";
@@ -50,7 +50,6 @@ export default function App() {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
-
   useEffect(() => {
     const t = setInterval(refresh, 5000);
     return () => clearInterval(t);
@@ -67,12 +66,8 @@ export default function App() {
   }, [alerts]);
 
   const handleClearAlerts = async () => {
-    try {
-      await apiService.clearAlerts();
-      refresh();
-    } catch (e) {
-      console.error("Clear error:", e);
-    }
+    try { await apiService.clearAlerts(); refresh(); }
+    catch (e) { console.error(e); }
   };
 
   const handleDownloadPDF = async () => {
@@ -81,7 +76,7 @@ export default function App() {
       const response = await apiService.downloadReport();
       const url  = URL.createObjectURL(response.data);
       const link = document.createElement("a");
-      link.href     = url;
+      link.href = url;
       link.download = `anomaly_report_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(link);
       link.click();
@@ -100,25 +95,14 @@ export default function App() {
 
   const modelData = stats
     ? Object.entries(stats.models || {}).map(([k, v]) => ({
-        name:     k.replace(/_/g, " "),
-        accuracy: v.accuracy,
-        f1:       v.f1_score ?? v.f1,
+        name: k.replace(/_/g, " "), accuracy: v.accuracy, f1: v.f1_score ?? v.f1,
       }))
     : [];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0e1a", overflowX: "hidden" }}>
-
-      <Header
-        loading={loading}
-        pdfLoading={pdfLoading}
-        onRefresh={refresh}
-        onDownload={handleDownloadPDF}
-        onClear={handleClearAlerts}
-      />
-
+    <div style={{ minHeight:"100vh", background:"#0a0e1a", overflowX:"hidden" }}>
+      <Header loading={loading} pdfLoading={pdfLoading} onRefresh={refresh} onDownload={handleDownloadPDF} onClear={handleClearAlerts} />
       <NavBar activeTab={tab} onTabChange={setTab} />
-
       <main className="page-content">
 
         {/* DASHBOARD */}
@@ -130,7 +114,6 @@ export default function App() {
               <StatCard icon={CheckCircle}   label="Benignes"         value={stats?.benign ?? 0}                color={COLORS.benign} />
               <StatCard icon={Shield}        label="Taux Detection"   value={`${stats?.detection_rate ?? 0}%`} color={COLORS.yellow} />
             </div>
-
             <div className="grid grid--2col">
               <div className="card">
                 <p className="card__title">Timeline des Detections</p>
@@ -139,53 +122,39 @@ export default function App() {
                     <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border} />
                     <XAxis dataKey="time" stroke={COLORS.text2} fontSize={10} />
                     <YAxis stroke={COLORS.text2} fontSize={10} width={28} />
-                    <Tooltip contentStyle={{ background: "#1f2937", border: `1px solid ${COLORS.border}`, fontSize: 12 }} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background:"#1f2937", border:`1px solid ${COLORS.border}`, fontSize:12 }} />
+                    <Legend wrapperStyle={{ fontSize:12 }} />
                     <Line type="monotone" dataKey="malicious" stroke={COLORS.malicious} strokeWidth={2} dot={false} name="Malveillant" />
                     <Line type="monotone" dataKey="benign"    stroke={COLORS.benign}    strokeWidth={2} dot={false} name="Benin" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-
               <div className="card">
                 <p className="card__title">Distribution</p>
                 <ResponsiveContainer width="100%" height={isMobile ? 200 : 220}>
                   <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%" cy="50%"
-                      innerRadius={isMobile ? 40 : 55}
-                      outerRadius={isMobile ? 65 : 85}
-                      dataKey="value"
-                      label={isMobile ? false : ({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
-                      fontSize={11}
-                    >
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={isMobile?40:55} outerRadius={isMobile?65:85} dataKey="value"
+                      label={isMobile ? false : ({ name, percent }) => `${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={11}>
                       {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ background: "#1f2937", border: `1px solid ${COLORS.border}`, fontSize: 12 }} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background:"#1f2937", border:`1px solid ${COLORS.border}`, fontSize:12 }} />
+                    <Legend wrapperStyle={{ fontSize:12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
-
             <AlertsTable alerts={alerts.slice(0, 8)} />
             <AttackSimulator onResult={() => setTimeout(refresh, 500)} />
           </>
         )}
 
-        {/* PREDICT */}
-        {tab === "predict" && (
-          <div style={{ maxWidth: 700, margin: "0 auto" }}>
-            <PredictForm onResult={() => setTimeout(refresh, 300)} />
-          </div>
-        )}
+        {/* ANALYSE */}
+        {tab === "analysis" && <AnalysisPage onResult={() => setTimeout(refresh, 500)} />}
 
-        {/* ALERTS */}
+        {/* ALERTES */}
         {tab === "alerts" && <AlertsTable alerts={alerts} />}
 
-        {/* MODELS */}
+        {/* MODELES */}
         {tab === "models" && <ModelsTab modelData={modelData} />}
 
       </main>
