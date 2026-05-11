@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # main.py - Backend FastAPI ITGATE
 # Dataset : CICIDS-2017
 # Features : 20 features selectionnees par Random Forest
@@ -9,7 +9,7 @@ from fastapi             import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from schemas             import NetworkData
 from datetime            import datetime
-from typing              import List, Dict, Any, Optional
+from typing              import List, Dict, Any
 import numpy  as np
 import pandas as pd
 import joblib, json, os
@@ -28,12 +28,9 @@ app.add_middleware(
     allow_headers     = ["*"],
 )
 
-# ── Chemins des modeles ──────────────────────────────────────
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR  = os.path.join(BASE_DIR, "models")
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, "models")
 
-# ── Mapping features CICIDS-2017 ────────────────────────────
-# Correspondance : champ Pydantic -> nom exact dans feature_names.json
 FEATURE_MAP = {
     "packet_length_std":          "Packet Length Std",
     "packet_length_max":          "Packet Length Max",
@@ -57,75 +54,51 @@ FEATURE_MAP = {
     "fwd_segment_size_avg":       "Fwd Segment Size Avg",
 }
 
-# ── Chargement des modeles au demarrage ──────────────────────
-models  = {}
-scaler  = None
-feature_names = []
-alerts: List[Dict[str, Any]] = []
+models:       Dict[str, Any] = {}
+scaler        = None
+feature_names: List[str]     = []
+
+# DEUX listes separees :
+# predictions = TOUTES les predictions (Benign + Malicious)
+# alerts      = uniquement les Malicious (pour la table d'alertes)
+predictions: List[Dict[str, Any]] = []
+alerts:      List[Dict[str, Any]] = []
+
 
 def load_models():
     global models, scaler, feature_names
-    try:
-        # Charger la liste des features
-        fn_path = os.path.join(MODELS_DIR, "feature_names.json")
-        with open(fn_path, "r") as f:
-            feature_names = json.load(f)
-        print(f"Features chargees : {len(feature_names)}")
+    fn_path = os.path.join(MODELS_DIR, "feature_names.json")
+    with open(fn_path, "r") as f:
+        feature_names = json.load(f)
+    print(f"Features chargees : {len(feature_names)}")
 
-        # Charger le scaler
-        scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
-        print("Scaler charge")
+    scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
+    print("Scaler charge")
 
-        # Charger tous les modeles
-        model_files = {
-            "random_forest":    "rf_model.pkl",
-            "xgboost":          "xgb_model.pkl",
-            "svm":              "svm_model.pkl",
-            "knn":              "knn_model.pkl",
-            "decision_tree":    "dt_model.pkl",
-            "isolation_forest": "iso_model.pkl",
-        }
-        for key, fname in model_files.items():
-            path = os.path.join(MODELS_DIR, fname)
-            if os.path.exists(path):
-                models[key] = joblib.load(path)
-                print(f"Modele charge : {key}")
-            else:
-                print(f"ATTENTION : {fname} introuvable")
-
-        print(f"\nTotal modeles charges : {len(models)}")
-    except Exception as e:
-        print(f"Erreur chargement modeles : {e}")
-        raise
+    model_files = {
+        "random_forest":    "rf_model.pkl",
+        "xgboost":          "xgb_model.pkl",
+        "svm":              "svm_model.pkl",
+        "knn":              "knn_model.pkl",
+        "decision_tree":    "dt_model.pkl",
+        "isolation_forest": "iso_model.pkl",
+    }
+    for key, fname in model_files.items():
+        path = os.path.join(MODELS_DIR, fname)
+        if os.path.exists(path):
+            models[key] = joblib.load(path)
+            print(f"Modele charge : {key}")
+    print(f"Total modeles : {len(models)}")
 
 load_models()
 
 
 def preparer_features(data: NetworkData) -> pd.DataFrame:
-    """
-    Construit le DataFrame de features a partir des donnees entrantes.
-    Utilise FEATURE_MAP pour correspondre les champs Pydantic
-    aux noms exacts des features CICIDS-2017.
-    """
-    row = {}
-    for pydantic_field, cicids_name in FEATURE_MAP.items():
-        row[cicids_name] = getattr(data, pydantic_field, 0.0)
-
-    df = pd.DataFrame([row])
-
-    # Reordonner selon l'ordre exact de feature_names.json
-    df = df[feature_names]
-
-    # Remplacer les valeurs infinies
+    row = {cicids: getattr(data, field, 0.0)
+           for field, cicids in FEATURE_MAP.items()}
+    df = pd.DataFrame([row])[feature_names]
     df = df.replace([np.inf, -np.inf], 0.0).fillna(0.0)
-
-    # Appliquer le scaler
-    df_scaled = pd.DataFrame(
-        scaler.transform(df),
-        columns=feature_names
-    )
-
-    return df_scaled
+    return pd.DataFrame(scaler.transform(df), columns=feature_names)
 
 
 @app.get("/")
@@ -142,34 +115,26 @@ def root():
 @app.get("/status")
 def status():
     return {
-        "api_status":  "online",
-        "dataset":     "CICIDS-2017",
-        "modeles":     {k: "loaded" for k in models},
+        "api_status":    "online",
+        "dataset":       "CICIDS-2017",
+        "modeles":       {k: "loaded" for k in models},
         "total_alertes": len(alerts),
-        "timestamp":   datetime.now().isoformat()
+        "timestamp":     datetime.now().isoformat()
     }
 
 
 @app.post("/predict")
 def predict(data: NetworkData):
-    """
-    Realise une prediction sur les donnees reseau entrantes.
-    Retourne : label (Benign/Malicious), confidence, modele utilise.
-    """
     model_key = (data.model or "random_forest").lower().replace(" ", "_")
 
     if model_key not in models:
         raise HTTPException(
-            status_code = 400,
-            detail      = f"Modele '{model_key}' introuvable. "
-                          f"Disponibles : {list(models.keys())}"
+            status_code=400,
+            detail=f"Modele '{model_key}' introuvable. Disponibles : {list(models.keys())}"
         )
 
     try:
-        # 1. Preparer les features
-        X = preparer_features(data)
-
-        # 2. Predire selon le type de modele
+        X     = preparer_features(data)
         model = models[model_key]
 
         if model_key == "isolation_forest":
@@ -177,24 +142,30 @@ def predict(data: NetworkData):
             prediction = 1 if raw_pred == -1 else 0
             scores     = model.score_samples(X)
             confidence = round(min(abs(float(scores[0])) * 100, 99.9), 2)
-
         elif model_key == "svm" and not hasattr(model, "predict_proba"):
-            # LinearSVC sans calibration
             prediction = int(model.predict(X)[0])
             decision   = model.decision_function(X)[0]
             confidence = round(min(float(abs(decision)) * 20 + 50, 99.9), 2)
-
         else:
             prediction = int(model.predict(X)[0])
             probas     = model.predict_proba(X)[0]
             confidence = round(float(max(probas)) * 100, 2)
 
         label = "Malicious" if prediction == 1 else "Benign"
+        ts    = datetime.now().isoformat()
 
-        # 3. Enregistrer l'alerte si malveillant
+        # Enregistrer TOUTES les predictions pour les stats
+        predictions.append({
+            "timestamp":  ts,
+            "label":      label,
+            "confidence": confidence,
+            "model":      model_key,
+        })
+
+        # Enregistrer uniquement les Malicious dans alerts
         if prediction == 1:
             alerts.append({
-                "timestamp":  datetime.now().isoformat(),
+                "timestamp":  ts,
                 "label":      label,
                 "confidence": confidence,
                 "model":      model_key,
@@ -205,11 +176,11 @@ def predict(data: NetworkData):
             "prediction": prediction,
             "confidence": confidence,
             "model":      model_key,
-            "timestamp":  datetime.now().isoformat()
+            "timestamp":  ts
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur de prediction : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur : {str(e)}")
 
 
 @app.get("/alerts")
@@ -220,24 +191,29 @@ def get_alerts():
 @app.delete("/alerts/clear")
 def clear_alerts():
     alerts.clear()
+    predictions.clear()
     return {"message": "Alertes effacees", "total": 0}
 
 
 @app.get("/stats")
 def get_stats():
-    if not alerts:
+    # Calcul base sur TOUTES les predictions
+    total = len(predictions)
+    if total == 0:
         return {
             "total": 0, "malicious": 0, "benign": 0,
             "malicious_pct": 0, "avg_confidence": 0
         }
-    mal  = sum(1 for a in alerts if a["label"] == "Malicious")
-    ben  = len(alerts) - mal
-    avg  = round(sum(a["confidence"] for a in alerts) / len(alerts), 2)
+
+    mal = sum(1 for p in predictions if p["label"] == "Malicious")
+    ben = total - mal
+    avg = round(sum(p["confidence"] for p in predictions) / total, 2)
+
     return {
-        "total":          len(alerts),
+        "total":          total,
         "malicious":      mal,
         "benign":         ben,
-        "malicious_pct":  round(mal / len(alerts) * 100, 1),
+        "malicious_pct":  round(mal / total * 100, 1),
         "avg_confidence": avg
     }
 
