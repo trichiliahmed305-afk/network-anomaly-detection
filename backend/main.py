@@ -27,7 +27,28 @@ app.add_middleware(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
-
+FEATURE_MAP = {
+    "packet_length_std":          "Packet Length Std",
+    "packet_length_max":          "Packet Length Max",
+    "rst_flag_count":             "RST Flag Count",
+    "fwd_packet_length_max":      "Fwd Packet Length Max",
+    "total_length_of_fwd_packet": "Total Length of Fwd Packet",
+    "fwd_packet_length_mean":     "Fwd Packet Length Mean",
+    "bwd_packet_length_std":      "Bwd Packet Length Std",
+    "packet_length_mean":         "Packet Length Mean",
+    "subflow_fwd_bytes":          "Subflow Fwd Bytes",
+    "flow_iat_max":               "Flow IAT Max",
+    "bwd_packet_length_mean":     "Bwd Packet Length Mean",
+    "bwd_packet_length_max":      "Bwd Packet Length Max",
+    "packet_length_variance":     "Packet Length Variance",
+    "dst_port":                   "Dst Port",
+    "bwd_segment_size_avg":       "Bwd Segment Size Avg",
+    "bwd_psh_flags":              "Bwd PSH Flags",
+    "flow_bytes_s":               "Flow Bytes/s",
+    "flow_packets_s":             "Flow Packets/s",
+    "average_packet_size":        "Average Packet Size",
+    "fwd_segment_size_avg":       "Fwd Segment Size Avg",
+}
 # -------------------------
 # GLOBAL STATE (STABLE)
 # -------------------------
