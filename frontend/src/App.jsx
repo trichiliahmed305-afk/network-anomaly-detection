@@ -35,13 +35,16 @@ export default function App() {
         apiService.getAlerts(),
       ]);
       const raw = s.data;
+
+      // Mapping correct avec les champs retournes par le backend CICIDS-2017
       setStats({
-        total_analyzed: raw.total_analyses     ?? 0,
-        malicious:      raw.trafic_malveillant ?? 0,
-        benign:         raw.trafic_benin       ?? 0,
-        detection_rate: raw.taux_detection     ?? 0,
-        models:         raw.models             ?? {},
+        total_analyzed: raw.total         ?? raw.total_analyses     ?? 0,
+        malicious:      raw.malicious     ?? raw.trafic_malveillant ?? 0,
+        benign:         raw.benign        ?? raw.trafic_benin       ?? 0,
+        detection_rate: raw.malicious_pct ?? raw.taux_detection     ?? 0,
+        models:         raw.models        ?? {},
       });
+
       setAlerts(a.data.alertes || a.data.alerts || []);
     } catch (e) {
       console.error("Refresh error:", e);
