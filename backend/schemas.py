@@ -1,34 +1,35 @@
+# ============================================================
+# schemas.py - CICIDS-2017
+# Modele Pydantic pour la validation des donnees entrantes
+# 20 features selectionnees par Random Forest sur CICIDS-2017
+# ============================================================
+
 from pydantic import BaseModel
-from typing import Optional
+from typing   import Optional
 
-class TrafficData(BaseModel):
-    id_orig_p: float = 0.0           # Port source
-    id_resp_p: float = 80.0          # Port destination
-    duration: float = 0.0            # Duree connexion
-    orig_bytes: float = 0.0          # Octets envoyes
-    resp_bytes: float = 0.0          # Octets recus
-    missed_bytes: float = 0.0        # Octets perdus
-    orig_pkts: float = 1.0           # Paquets envoyes
-    orig_ip_bytes: float = 0.0       # Octets IP source
-    resp_pkts: float = 1.0           # Paquets recus
-    resp_ip_bytes: float = 0.0       # Octets IP destination
-    is_orig_local: int = 1           # IP locale (1) ou externe (0)
-    orig_h_count: float = 1.0        # Frequence IP source
-    resp_h_count: float = 1.0        # Frequence IP destination
-    is_well_known_port: int = 0      # Port < 1024
-    hour: int = 12                   # Heure
-    minute: int = 0                  # Minute
-    day_of_week: int = 0             # Jour (0=lundi)
-    inter_arrival_time: float = 0.0  # Intervalle entre connexions
-    pkt_ratio: float = 1.0           # Ratio paquets
-    avg_orig_pkt_size: float = 0.0   # Taille moyenne paquets source
-    avg_resp_pkt_size: float = 0.0   # Taille moyenne paquets destination
-    model: Optional[str] = "random_forest"  # Modele ML selectionne
 
-class PredictionResult(BaseModel):
-    prediction: int
-    label: str
-    confidence: float
-    risk_level: str
-    model_used: str
-    alert_message: str
+class NetworkData(BaseModel):
+    # ── TOP 20 FEATURES CICIDS-2017 ─────────────────────────
+    packet_length_std:            float = 0.0
+    packet_length_max:            float = 0.0
+    rst_flag_count:               float = 0.0
+    fwd_packet_length_max:        float = 0.0
+    total_length_of_fwd_packet:   float = 0.0
+    fwd_packet_length_mean:       float = 0.0
+    bwd_packet_length_std:        float = 0.0
+    packet_length_mean:           float = 0.0
+    subflow_fwd_bytes:            float = 0.0
+    flow_iat_max:                 float = 0.0
+    bwd_packet_length_mean:       float = 0.0
+    bwd_packet_length_max:        float = 0.0
+    packet_length_variance:       float = 0.0
+    dst_port:                     float = 0.0
+    bwd_segment_size_avg:         float = 0.0
+    bwd_psh_flags:                float = 0.0
+    flow_bytes_s:                 float = 0.0
+    flow_packets_s:               float = 0.0
+    average_packet_size:          float = 0.0
+    fwd_segment_size_avg:         float = 0.0
+
+    # ── Modele selectionne ───────────────────────────────────
+    model: Optional[str] = "random_forest"
