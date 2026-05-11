@@ -1,4 +1,4 @@
-﻿# backend/pdf_report.py - Version 3.0 - ITGATE PFE 2026
+# backend/pdf_report.py - Version 3.0 - ITGATE PFE 2026
 from fpdf import FPDF
 from datetime import datetime
 from typing import List

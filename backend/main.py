@@ -231,3 +231,53 @@ def get_models():
         })
     return {"available": result, "total": len(result),
             "dataset": "CICIDS-2017", "features": feature_names}
+
+
+# ── PDF REPORT ───────────────────────────────────────────────
+
+
+# ── PDF REPORT ───────────────────────────────────────────────
+from fastapi.responses import StreamingResponse
+import io
+
+@app.get("/report")
+def generate_report():
+    """
+    Genere le rapport PDF professionnel ITGATE
+    en utilisant le vrai pdf_report.py (fpdf)
+    """
+    try:
+        from pdf_report import generer_rapport_pdf
+
+        # Construire alert_history depuis predictions[]
+        # Format attendu par pdf_report.py :
+        # { timestamp, prediction (0/1), confidence, model, risk_level }
+        def get_risk(conf, label):
+            if label == "Benign": return "LOW"
+            if conf >= 90: return "CRITICAL"
+            if conf >= 75: return "HIGH"
+            if conf >= 60: return "MEDIUM"
+            return "LOW"
+
+        alert_history = []
+        for p in reversed(predictions):
+            alert_history.append({
+                "timestamp":  p["timestamp"],
+                "prediction": 1 if p["label"] == "Malicious" else 0,
+                "label":      p["label"],
+                "confidence": p["confidence"],
+                "model":      p["model"],
+                "risk_level": get_risk(p["confidence"], p["label"]),
+            })
+
+        pdf_bytes = generer_rapport_pdf(alert_history)
+
+        fname = f"anomaly_report_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={fname}"}
+        )
+
+    except Exception as e:
+        raise HTTPException(500, detail=f"Erreur PDF : {str(e)}")
